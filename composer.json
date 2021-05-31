@@ -1,0 +1,19 @@
+{
+  "name": "zan/doctrine-rest-bundle",
+  "description": "REST API with doctrine integrations to enable working with large result sets",
+  "type": "symfony-bundle",
+  "license": "MIT",
+  "require": {
+    "php": ">=7.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "Zan\\DoctrineRestBundle\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Zan\\DoctrineRestBundle\\Tests\\": "tests/"
+    }
+  }
+}
