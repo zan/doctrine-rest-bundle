@@ -1,0 +1,4 @@
+zan_doctrine_rest_bundle:
+  resource: '@ZanDoctrineRestBundle/Controller/'
+  type: annotation
+  prefix: zan/drest/

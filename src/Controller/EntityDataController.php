@@ -22,6 +22,7 @@ use Doctrine\ORM\Query\Expr\Base;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Annotation\Route;
 
 /**
  * @Route("/entity")
@@ -34,12 +35,13 @@ class EntityDataController extends AbstractController
     public function listEntities(
         string $entityId,
         Request $request,
-        EntityManager $em,
+        EntityManagerInterface $em,
         Reader $annotationReader,
     ) {
         $params = RequestUtils::getParameters($request);
         $responseFields = [];
         $includeMetadata = [];
+        $user = $this->container->has('security.token_storage') ? $this->getUser() : null;
 
         $entityClassName = $this->unescapeEntityId($entityId);
         $permissionsCalculatorFactory = new PermissionsCalculatorFactory($em);
@@ -56,7 +58,8 @@ class EntityDataController extends AbstractController
             $em,
             $entityClassName
         );
-        $resultSet->setActingUser($this->getUser());
+        $resultSet->setActingUser($user);
+
 
         $entitySerializer = new MinimalEntitySerializer(
             $em,
@@ -72,7 +75,7 @@ class EntityDataController extends AbstractController
             $includeEditability = true;
             $editabilityMap = new ResultSetEditabilityMap(
                 $permissionsCalculator,
-                $this->getUser()
+                $user
             );
         }
         // todo: implement canCreateEntity
@@ -109,6 +112,7 @@ class EntityDataController extends AbstractController
     ) {
         $params = RequestUtils::getParameters($request);
         $entityClassName = $this->unescapeEntityId($entityId);
+        $user = $this->container->has('security.token_storage') ? $this->getUser() : null;
 
         $responseFields = [];
 
@@ -124,7 +128,7 @@ class EntityDataController extends AbstractController
         }
 
         $resultSet = new GenericEntityResultSet($em, $entityClassName);
-        $resultSet->setActingUser($this->getUser());
+        $resultSet->setActingUser($user);
 
         // Apply identifier filter
         $this->applyIdentifierFilter($resultSet, $identifier, $em, $annotationReader);
@@ -190,11 +194,12 @@ class EntityDataController extends AbstractController
     {
         $em = $this->get('doctrine.orm.entity_manager');
         $entityClassName = $this->unescapeEntityId($entityId);
+        $user = $this->container->has('security.token_storage') ? $this->getUser() : null;
 
         $permissionsCalculatorFactory = new PermissionsCalculatorFactory($em);
         $permissionsCalculator = $permissionsCalculatorFactory->getPermissionsCalculator($entityClassName);
 
-        $entityLoader = new ApiEntityLoader($em, $this->getUser());
+        $entityLoader = new ApiEntityLoader($em, $user);
         $entityLoader->setPermissionsCalculator($permissionsCalculator);
 
         $serializer = new MinimalEntitySerializer(
@@ -206,7 +211,7 @@ class EntityDataController extends AbstractController
         if (!$entity) throw new \InvalidArgumentException("No entity found with the specified identifier");
 
         // Deny access unless there's a calculator that specifically permits access
-        if (!$permissionsCalculator || !$permissionsCalculator->canEditEntity($entity, $this->getUser())) {
+        if (!$permissionsCalculator || !$permissionsCalculator->canEditEntity($entity, $user)) {
             // todo: better exceptions here and when not found
             throw new \InvalidArgumentException('User does not have permissions to edit entity');
         }
@@ -232,11 +237,12 @@ class EntityDataController extends AbstractController
     {
         $em = $this->get('doctrine.orm.entity_manager');
         $entityClassName = $this->unescapeEntityId($entityId);
+        $user = $this->container->has('security.token_storage') ? $this->getUser() : null;
 
         $permissionsCalculatorFactory = new PermissionsCalculatorFactory($em);
         $permissionsCalculator = $permissionsCalculatorFactory->getPermissionsCalculator($entityClassName);
 
-        $entityLoader = new ApiEntityLoader($em, $this->getUser());
+        $entityLoader = new ApiEntityLoader($em, $user);
         $entityLoader->setPermissionsCalculator($permissionsCalculator);
 
         $serializer = new MinimalEntitySerializer(
@@ -245,7 +251,7 @@ class EntityDataController extends AbstractController
         );
 
         // Deny access unless there's a calculator that specifically permits access
-        if (!$permissionsCalculator || !$permissionsCalculator->canCreateEntity($entityClassName, $this->getUser())) {
+        if (!$permissionsCalculator || !$permissionsCalculator->canCreateEntity($entityClassName, $user)) {
             // todo: better exception here
             throw new \InvalidArgumentException('User does not have permissions to create entity');
         }
