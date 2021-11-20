@@ -46,7 +46,7 @@ class MinimalEntitySerializer
         // Serialize properties first
         foreach ($metadata->fieldNames as $columnName => $propertyName) {
             // If recursing, ignore fields that don't match the map
-            if ($parentPath && !$fieldMap->contains($parentPath . $propertyName)) continue;
+            if ($parentPath && !$fieldMap->contains($parentPath)) continue;
 
             // Ignore properties that aren't exposed to the serializer
             if (!$this->propertyAvailableForSerialization($entity, $propertyName)) continue;
@@ -66,8 +66,31 @@ class MinimalEntitySerializer
             // Ignore properties that aren't exposed to the serializer
             if (!$this->propertyAvailableForSerialization($entity, $propertyName)) continue;
 
+            // Many To One is serialized as the ID or the full entity depending on whether it's in the map or not
+            // todo: test with one to one and pull this out into its own method
+            if (isset($association['type']) && $association['type'] & (ClassMetadataInfo::MANY_TO_ONE | ClassMetadataInfo::ONE_TO_ONE)) {
+                $checkPath = $parentPath . $propertyName;
+                // Explicitly included, serialize everything
+                if ($fieldMap->contains($checkPath)) {
+                    $assocValue = ZanObject::getPropertyValue($entity, $propertyName, true);
+                    if ($assocValue === null) continue;
+
+                    $serialized[$propertyName] = $this->recursiveSerialize($assocValue, $fieldMap, $parentPath . $propertyName . '.', $associationMetadata);
+                }
+                // Otherwise, just include the ID
+                else {
+                    // This will be a doctrine proxy object or null
+                    $assocValue = ZanObject::getPropertyValue($entity, $propertyName, true);
+                    if ($assocValue === null) continue;
+
+                    $serialized[$propertyName] = $assocValue->getId(); // todo: works with other ID fields?
+                }
+                // Handled, continue
+                continue;
+            }
+
             // "type" is a bitmask, see doctrine's ClassMetadaInfo.php
-            // Convert "To Many" associations to an array
+            // "X To Many" associations become arrays
             if (isset($association['type']) && $association['type'] & ClassMetadataInfo::TO_MANY) {
                 $checkPath = $parentPath . $propertyName;
                 if ($fieldMap->contains($checkPath)) {

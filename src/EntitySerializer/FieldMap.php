@@ -4,6 +4,8 @@
 namespace Zan\DoctrineRestBundle\EntitySerializer;
 
 
+use Zan\CommonBundle\Util\ZanString;
+
 /**
  * todo: still necessary? most of this can be deleted?
  */
@@ -27,6 +29,8 @@ class FieldMap
 
     public function contains($propertyPath): bool
     {
+        // Trim trailing "."
+        $propertyPath = rtrim($propertyPath, '.');
         return isset($this->map[$propertyPath]);
 
         $parsedPath = explode('.', $propertyPath);
