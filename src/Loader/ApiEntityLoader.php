@@ -26,11 +26,37 @@ class ApiEntityLoader
         $this->actingUser = $actingUser;
     }
 
+    /**
+     * todo: docs and typehinting
+     *
+     * todo: document that this requires constructor arguments to be named in a certain way
+     */
     public function create($entityClassName, $rawInput)
     {
+        // Ensure all required arguments are available so we can call the constructor
+        $requiredArgs = ZanObject::getRequiredConstructorArguments($entityClassName);
+        $constructorArgs = [];
+        foreach ($requiredArgs as $arg) {
+            foreach ($rawInput as $key => $value) {
+                // Find parameters in the API call that match required arguments
+                if ($key != $arg->getName()) continue;
+
+                $propertyMetadata = new EntityPropertyMetadata(
+                    $this->em->getClassMetadata($entityClassName),
+                    $key
+                );
+
+                $resolvedValue = $this->resolveValue($value, $propertyMetadata);
+                $constructorArgs[] = $resolvedValue;
+            }
+        }
+
+        dump($constructorArgs);
+
         // todo: call entity constructor and load
         // todo: constructor args
-        $newEntity = new $entityClassName;
+        $reflectionClass = new \ReflectionClass($entityClassName);
+        $newEntity = $reflectionClass->newInstanceArgs($constructorArgs);
 
         $this->load($newEntity, $rawInput);
 
@@ -77,6 +103,11 @@ class ApiEntityLoader
         }
         if ('boolean' === $propertyMetadata->dataType) {
             return boolval($rawValue);
+        }
+
+        // Dates
+        if ('datetime_immutable' === $propertyMetadata->dataType) {
+            return \DateTimeImmutable::createFromFormat(DATE_ATOM, $rawValue);
         }
 
         if ('entity' === $propertyMetadata->dataType) {
