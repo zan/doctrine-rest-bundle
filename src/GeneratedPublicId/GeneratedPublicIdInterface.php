@@ -1,0 +1,34 @@
+<?php
+
+namespace Zan\DoctrineRestBundle\GeneratedPublicId;
+
+use Zan\DoctrineRestBundle\Entity\GeneratedPublicIdStateEntry;
+
+/**
+ * Indicates that this entity supports automatic publicId generation
+ *
+ * Apply this to your entities with:
+ *
+ *      ORM\EntityListeners({
+ *       "Zan\DoctrineRestBundle\GeneratedPublicId\GeneratedPublicIdListener"
+ *      })
+ *
+ * See also: GeneratedPublicIdListener
+ */
+interface GeneratedPublicIdInterface
+{
+    /**
+     * Returns the current publicId for this entity
+     *
+     * NOTE: Automatic publicId generation via GeneratedPublicIdListener will only happen if this returns null initially
+     *
+     * @return mixed
+     */
+    public function getPublicId();
+
+    /**
+     * The entity must use the current GeneratedPublicIdStateEntry to generate a new publicId and then update
+     * $publicIdState for the next entity that needs it
+     */
+    public function applyGeneratedPublicIdState(GeneratedPublicIdStateEntry $publicIdState);
+}
