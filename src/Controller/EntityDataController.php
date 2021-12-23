@@ -10,6 +10,8 @@ use Zan\CommonBundle\Util\ZanArray;
 use Zan\DoctrineRestBundle\Annotation\HumanReadableId;
 use Zan\DoctrineRestBundle\EntityResultSet\AbstractEntityResultSet;
 use Zan\DoctrineRestBundle\EntityResultSet\GenericEntityResultSet;
+use Zan\DoctrineRestBundle\EntityResultSet\ResultSetFilter;
+use Zan\DoctrineRestBundle\EntityResultSet\ResultSetFilterCollection;
 use Zan\DoctrineRestBundle\EntitySerializer\MinimalEntitySerializer;
 use Zan\DoctrineRestBundle\Loader\ApiEntityLoader;
 use Zan\DoctrineRestBundle\Permissions\PermissionsCalculatorFactory;
@@ -42,6 +44,8 @@ class EntityDataController extends AbstractController
         $params = RequestUtils::getParameters($request);
         $responseFields = [];
         $includeMetadata = [];
+        // Collection of filters to apply to the result set
+        $filterCollection = new ResultSetFilterCollection();
         $user = $this->container->has('security.token_storage') ? $this->getUser() : null;
 
         $entityClassName = $this->unescapeEntityId($entityId);
@@ -54,14 +58,19 @@ class EntityDataController extends AbstractController
         if ($request->query->has('responseFields')) {
             $responseFields = ZanArray::createFromString($params['responseFields']);
         }
+        if ($request->query->has('filter')) {
+            // This parameter is json-encoded
+            $decodedFilters = json_decode($request->query->get('filter'), true);
+            $filterCollection = ResultSetFilterCollection::buildFromArray($decodedFilters);
+        }
 
         $resultSet = new GenericEntityResultSet(
             $em,
             $entityClassName
         );
         $resultSet->setActingUser($user);
-
-
+        $resultSet->setDataFilterCollection($filterCollection);
+        
         $entitySerializer = new MinimalEntitySerializer(
             $em,
             $annotationReader

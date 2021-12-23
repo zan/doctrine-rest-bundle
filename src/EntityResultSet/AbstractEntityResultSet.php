@@ -42,6 +42,8 @@ abstract class AbstractEntityResultSet
      */
     protected $filterExprs = [];
 
+    protected ResultSetFilterCollection $dataFilterCollection;
+
     public function __construct(
         EntityManager $em,
         string $entityClassName
@@ -52,6 +54,7 @@ abstract class AbstractEntityResultSet
 
         $this->resultSetParameters = [];
         $this->dqlParameters = [];
+        $this->dataFilterCollection = new ResultSetFilterCollection();
     }
 
     public function getResults()
@@ -124,6 +127,8 @@ abstract class AbstractEntityResultSet
             $qb->andWhere('e.isDeleted = false');
         }
 
+        $this->dataFilterCollection->applyToQueryBuilder($qb);
+
         // Apply permissions filters, if present
         $this->applyPermissionsFilters($qb);
 
@@ -138,6 +143,7 @@ abstract class AbstractEntityResultSet
         }
 
         //QuickLogger::log($qb);
+        dump($qb->getDQL());
         return $qb;
     }
 
@@ -206,5 +212,15 @@ abstract class AbstractEntityResultSet
     public function setActingUser($actingUser): void
     {
         $this->actingUser = $actingUser;
+    }
+
+    public function getDataFilterCollection(): ResultSetFilterCollection
+    {
+        return $this->dataFilterCollection;
+    }
+
+    public function setDataFilterCollection(ResultSetFilterCollection $dataFilterCollection): void
+    {
+        $this->dataFilterCollection = $dataFilterCollection;
     }
 }
