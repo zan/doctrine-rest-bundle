@@ -14,6 +14,7 @@ use Zan\DoctrineRestBundle\EntityResultSet\ResultSetFilter;
 use Zan\DoctrineRestBundle\EntityResultSet\ResultSetFilterCollection;
 use Zan\DoctrineRestBundle\EntitySerializer\MinimalEntitySerializer;
 use Zan\DoctrineRestBundle\Loader\ApiEntityLoader;
+use Zan\DoctrineRestBundle\Permissions\EntityPropertyEditabilityMap;
 use Zan\DoctrineRestBundle\Permissions\PermissionsCalculatorFactory;
 use Zan\DoctrineRestBundle\Permissions\ResultSetEditabilityMap;
 use Doctrine\Common\Annotations\Reader;
@@ -70,7 +71,7 @@ class EntityDataController extends AbstractController
         );
         $resultSet->setActingUser($user);
         $resultSet->setDataFilterCollection($filterCollection);
-        
+
         $entitySerializer = new MinimalEntitySerializer(
             $em,
             $annotationReader
@@ -123,9 +124,16 @@ class EntityDataController extends AbstractController
         $params = RequestUtils::getParameters($request);
         $entityClassName = $this->unescapeEntityId($entityId);
         $user = $this->container->has('security.token_storage') ? $this->getUser() : null;
+        $permissionsCalculatorFactory = new PermissionsCalculatorFactory($em);
+        $permissionsCalculator = $permissionsCalculatorFactory->getPermissionsCalculator($entityClassName);
 
         $responseFields = [];
+        $includeMetadata = [];  // which types of metadata to include in the response
+        $metadata = [];         // metadata serialized to the response
 
+        if ($request->query->has('includeMetadata')) {
+            $includeMetadata = ZanArray::createFromString($params['includeMetadata']);
+        }
         if ($request->query->has('responseFields')) {
             $responseFields = ZanArray::createFromString($params['responseFields']);
         }
@@ -137,16 +145,44 @@ class EntityDataController extends AbstractController
             $identifier = $request->query->get('identifier');
         }
 
+        $editabilityMap = null;
+        $includeEditability = false;
+        $includeFieldEditability = false;
+        if (in_array('editability', $includeMetadata)) {
+            $includeEditability = true;
+            $editabilityMap = new ResultSetEditabilityMap(
+                $permissionsCalculator,
+                $user
+            );
+        }
+        if (in_array('fieldEditability', $includeMetadata)) {
+            $includeFieldEditability = true;
+            dump(get_class($permissionsCalculator));
+            $propertyEditabilityMap = new EntityPropertyEditabilityMap(
+                $em,
+                $annotationReader,
+                $permissionsCalculator,
+                $user
+            );
+        }
+
         $resultSet = new GenericEntityResultSet($em, $entityClassName);
         $resultSet->setActingUser($user);
 
         // Apply identifier filter
         $this->applyIdentifierFilter($resultSet, $identifier, $em, $annotationReader);
 
-        // todo: escaping + parameter handling
-        //$resultSet->addFilterDql('e = ' . $identifier);
-
         $entity = $resultSet->mustGetSingleResult();
+
+        // Apply field editability information, if requested
+        if ($includeEditability) {
+            $editabilityMap->processEntity($entity);
+            $metadata['editability'] = $editabilityMap->getCompressedMap();
+        }
+        if ($includeFieldEditability) {
+            $propertyEditabilityMap->processEntity($entity);
+            $metadata['fieldEditability'] = $propertyEditabilityMap->getCompressedMap();
+        }
 
         $serializer = new MinimalEntitySerializer(
             $em,
@@ -158,6 +194,7 @@ class EntityDataController extends AbstractController
         $retData = [
             'success' => true,
             'data' => $serialized,
+            'metadata' => $metadata,
         ];
 
         return new JsonResponse($retData);
