@@ -142,8 +142,7 @@ abstract class AbstractEntityResultSet
             $qb->setParameter($name, $value);
         }
 
-        //QuickLogger::log($qb);
-        dump($qb->getDQL());
+        //dump($qb->getDQL());
         return $qb;
     }
 

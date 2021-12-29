@@ -11,6 +11,8 @@ use Doctrine\ORM\Mapping\Annotation;
  *
  * This is in contrast to an integer ID used internally by the database
  *
+ * todo: this would be better as publicId
+ *
  * @Annotation
  * @Target({"PROPERTY"})
  */

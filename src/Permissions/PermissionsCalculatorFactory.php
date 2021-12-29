@@ -38,8 +38,6 @@ class PermissionsCalculatorFactory
             }
         }
 
-        // todo: remove this
-        return new AlwaysAllowsPermissionsCalculator();
         return $calculator;
     }
 }
