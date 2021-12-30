@@ -4,6 +4,7 @@
 namespace Zan\DoctrineRestBundle\Controller;
 
 
+use Symfony\Component\Workflow\Registry;
 use Zan\CommonBundle\Util\RequestUtils;
 use Zan\CommonBundle\Util\ZanAnnotation;
 use Zan\CommonBundle\Util\ZanArray;
@@ -27,6 +28,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Zan\DoctrineRestBundle\Response\WorkflowResponse;
 
 /**
  * @Route("/entity")
@@ -65,10 +67,7 @@ class EntityDataController extends AbstractController
             $filterCollection = ResultSetFilterCollection::buildFromArray($decodedFilters);
         }
 
-        $resultSet = new GenericEntityResultSet(
-            $em,
-            $entityClassName
-        );
+        $resultSet = new GenericEntityResultSet($entityClassName, $em, $annotationReader);
         $resultSet->setActingUser($user);
         $resultSet->setDataFilterCollection($filterCollection);
 
@@ -120,6 +119,7 @@ class EntityDataController extends AbstractController
         Request $request,
         EntityManagerInterface $em,
         Reader $annotationReader,
+        Registry $workflowRegistry,
     ) {
         $params = RequestUtils::getParameters($request);
         $entityClassName = $this->unescapeEntityId($entityId);
@@ -166,7 +166,7 @@ class EntityDataController extends AbstractController
             );
         }
 
-        $resultSet = new GenericEntityResultSet($em, $entityClassName);
+        $resultSet = new GenericEntityResultSet($entityClassName, $em, $annotationReader);
         $resultSet->setActingUser($user);
 
         // Apply identifier filter
@@ -191,6 +191,10 @@ class EntityDataController extends AbstractController
 
         $serialized = $serializer->serialize($entity, $responseFields);
 
+        if ($request->query->has('includeWorkflow')) {
+            $serialized['workflow'] = $this->serializeWorkflow($entity, $workflowRegistry);
+        }
+
         $retData = [
             'success' => true,
             'data' => $serialized,
@@ -200,6 +204,16 @@ class EntityDataController extends AbstractController
         return new JsonResponse($retData);
     }
 
+    protected function serializeWorkflow($entity, Registry $workflowRegistry)
+    {
+        $workflow = $workflowRegistry->get($entity);
+
+        return (new WorkflowResponse($workflow, $entity))->toArray();
+    }
+
+    /**
+     * todo: moved to AbstractEntityResultSet
+     */
     protected function applyIdentifierFilter(
         GenericEntityResultSet $resultSet,
         $identifier,
@@ -348,7 +362,7 @@ class EntityDataController extends AbstractController
             $identifier = $request->query->get('identifier');
         }
 
-        $resultSet = new GenericEntityResultSet($em, $entityClassName);
+        $resultSet = new GenericEntityResultSet($entityClassName, $em, $annotationReader);
         $resultSet->setActingUser($user);
 
         // Apply identifier filter
