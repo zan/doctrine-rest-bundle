@@ -157,7 +157,6 @@ class EntityDataController extends AbstractController
         }
         if (in_array('fieldEditability', $includeMetadata)) {
             $includeFieldEditability = true;
-            dump(get_class($permissionsCalculator));
             $propertyEditabilityMap = new EntityPropertyEditabilityMap(
                 $em,
                 $annotationReader,
