@@ -4,7 +4,12 @@
 namespace Zan\DoctrineRestBundle\EntityResultSet;
 
 
+use Doctrine\Common\Annotations\Reader;
+use Doctrine\ORM\Mapping\Id;
+use Doctrine\ORM\Query\Expr\Orx;
+use Zan\CommonBundle\Util\ZanAnnotation;
 use Zan\CommonBundle\Util\ZanObject;
+use Zan\DoctrineRestBundle\Annotation\HumanReadableId;
 use Zan\DoctrineRestBundle\EntityResultSet\EntityResultSetAvailableParameter;
 use Zan\DoctrineRestBundle\Permissions\PermissionsCalculatorFactory;
 use Zan\DoctrineRestBundle\Permissions\PermissionsCalculatorInterface;
@@ -16,6 +21,9 @@ abstract class AbstractEntityResultSet
 {
     /** @var EntityManager */
     protected $em;
+
+    /** @var Reader */
+    protected $annotationReader;
 
     /** @var array */
     protected $resultSetParameters;
@@ -45,10 +53,12 @@ abstract class AbstractEntityResultSet
     protected ResultSetFilterCollection $dataFilterCollection;
 
     public function __construct(
+        string $entityClassName,
         EntityManager $em,
-        string $entityClassName
+        Reader $annotationReader,
     ) {
         $this->em = $em;
+        $this->annotationReader = $annotationReader;
         $this->entityClassName = $entityClassName;
         $this->entityMetadata = $em->getClassMetadata($entityClassName);
 
@@ -69,6 +79,43 @@ abstract class AbstractEntityResultSet
         if (count($results) !== 1) throw new \ErrorException('Expected exactly 1 result, got ' . count($results));
 
         return $results[0];
+    }
+
+    /**
+     * Filters the result set so that it only includes records where the identifier matches $identifier
+     *
+     * Identifiers are any of the following:
+     *  - The doctrine ORM\Id property
+     *  - Any property annotated with Zan\HumanReadableId
+     */
+    public function addIdentifierFilter($identifier)
+    {
+        $expr = $this->em->getExpressionBuilder();
+
+        $identifiersExpr = new Orx();
+
+        foreach ($this->getEntityProperties() as $property) {
+            $hasDoctrineId = ZanAnnotation::hasPropertyAnnotation(
+                $this->annotationReader,
+                Id::class,
+                $this->getEntityClassName(),
+                $property->name
+            );
+
+            $hasZanHumanReadableId = ZanAnnotation::hasPropertyAnnotation(
+                $this->annotationReader,
+                HumanReadableId::class,
+                $this->getEntityClassName(),
+                $property->name
+            );
+
+            if ($hasDoctrineId || $hasZanHumanReadableId) {
+                $identifiersExpr->add($expr->eq('e.' . $property->name, ':identifier'));
+            }
+        }
+
+        $this->addFilterExpr($identifiersExpr);
+        $this->setDqlParameter('identifier', $identifier);
     }
 
     public function addFilterDql($dql, $parameters = [])
