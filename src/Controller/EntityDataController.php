@@ -197,8 +197,8 @@ class EntityDataController extends AbstractController
         $retData = [
             'success' => true,
             'data' => $serialized,
-            'metadata' => $metadata,
         ];
+        if ($metadata) $retData['metadata'] = $metadata;
 
         return new JsonResponse($retData);
     }
