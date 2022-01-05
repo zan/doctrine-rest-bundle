@@ -13,12 +13,12 @@ use Zan\CommonBundle\Util\ZanArray;
 use Zan\DoctrineRestBundle\EntitySerializer\MinimalEntitySerializer;
 
 /**
- * @Route("/logged-in-user")
+ * 
  */
 class LoggedInUserController extends AbstractController
 {
     /**
-     * @Route("/")
+     * @Route("/logged-in-user")
      */
     public function getLoggedInUser(
         Request $request,
