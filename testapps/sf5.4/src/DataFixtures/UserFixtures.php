@@ -15,6 +15,8 @@ class UserFixtures extends Fixture
             
             $entity->setDisplayName($raw['displayName'] ?? null);
 
+            $entity->setNumFailedLogins($raw['numFailedLogins'] ?? 0);
+
             $manager->persist($entity);
             $this->setReference(User::class . '.' . $raw['username'], $entity);
         }
@@ -32,6 +34,12 @@ class UserFixtures extends Fixture
             [
                 'username' => 'test2',
                 'displayName' => 'Second Testuser',
+            ],
+
+            [
+                'username' => 'hasFailedLogins',
+                'displayName' => 'FailedLogin ErrorUser',
+                'numFailedLogins' => 2,
             ],
         ];
     }

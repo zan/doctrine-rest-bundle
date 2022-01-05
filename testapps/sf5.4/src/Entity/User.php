@@ -15,7 +15,6 @@ class User
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     *
      * @ApiEnabled
      */
     private ?int $id;
@@ -29,6 +28,11 @@ class User
      * @ORM\Column(type="string", nullable=false)
      */
     private ?string $displayName;
+
+    /**
+     * @ORM\Column(type="integer", nullable=false)
+     */
+    private int $numFailedLogins = 0;
 
     public function __construct(string $username)
     {
@@ -61,5 +65,15 @@ class User
     public function setDisplayName(?string $displayName): void
     {
         $this->displayName = $displayName;
+    }
+
+    public function getNumFailedLogins(): int
+    {
+        return $this->numFailedLogins;
+    }
+
+    public function setNumFailedLogins(int $numFailedLogins): void
+    {
+        $this->numFailedLogins = $numFailedLogins;
     }
 }
