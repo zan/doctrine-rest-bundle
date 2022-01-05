@@ -2,12 +2,13 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Zan\DoctrineRestBundle\Annotation\ApiEnabled;
 
 /**
  * @ORM\Entity
- * @ORM\Table(name="app_users")
+ * @ORM\Table(name="users")
  */
 class User
 {
@@ -34,9 +35,19 @@ class User
      */
     private int $numFailedLogins = 0;
 
+    /**
+     * @var UserGroup[]
+     * @ORM\OneToMany(targetEntity="UserGroup", mappedBy="user")
+     *
+     * @ApiEnabled
+     */
+    protected $userGroupMappings;
+
     public function __construct(string $username)
     {
         $this->username = $username;
+
+        $this->userGroupMappings = new ArrayCollection();
     }
 
     /**
