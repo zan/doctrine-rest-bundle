@@ -11,6 +11,7 @@ use Zan\CommonBundle\Util\ZanAnnotation;
 use Zan\CommonBundle\Util\ZanObject;
 use Zan\DoctrineRestBundle\Annotation\HumanReadableId;
 use Zan\DoctrineRestBundle\EntityResultSet\EntityResultSetAvailableParameter;
+use Zan\DoctrineRestBundle\ORM\ZanQueryBuilder;
 use Zan\DoctrineRestBundle\Permissions\PermissionsCalculatorFactory;
 use Zan\DoctrineRestBundle\Permissions\PermissionsCalculatorInterface;
 use Doctrine\ORM\EntityManager;
@@ -193,9 +194,9 @@ abstract class AbstractEntityResultSet
         return $qb;
     }
 
-    protected function getBaseQueryBuilder()
+    protected function getBaseQueryBuilder() : ZanQueryBuilder
     {
-        return $this->em->createQueryBuilder();
+        return new ZanQueryBuilder($this->em);
     }
 
     protected function applyPermissionsFilters(QueryBuilder $qb)
