@@ -254,5 +254,8 @@
     },
     "symfony/yaml": {
         "version": "v5.4.2"
+    },
+    "zan/common-bundle": {
+        "version": "dev-main"
     }
 }

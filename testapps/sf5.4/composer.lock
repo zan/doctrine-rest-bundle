@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "37cff85da172418fd77a30576f3e31fb",
+    "content-hash": "dfcf2755571a3c3d5e8c4a560518f0b6",
     "packages": [
         {
             "name": "composer/package-versions-deprecated",
@@ -4436,6 +4436,41 @@
                 }
             ],
             "time": "2021-12-16T21:58:21+00:00"
+        },
+        {
+            "name": "zan/common-bundle",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/zan/common-bundle.git",
+                "reference": "a7ba836d15d80693bcc0d8b0d50552c0d91da154"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/zan/common-bundle/zipball/a7ba836d15d80693bcc0d8b0d50552c0d91da154",
+                "reference": "a7ba836d15d80693bcc0d8b0d50552c0d91da154",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1"
+            },
+            "default-branch": true,
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "Zan\\CommonBundle\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Common code shared among many Symfony applications",
+            "support": {
+                "issues": "https://github.com/zan/common-bundle/issues",
+                "source": "https://github.com/zan/common-bundle/tree/main"
+            },
+            "time": "2021-12-16T18:49:26+00:00"
         }
     ],
     "packages-dev": [
@@ -4602,7 +4637,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "zan/common-bundle": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
@@ -4610,8 +4647,6 @@
         "ext-ctype": "*",
         "ext-iconv": "*"
     },
-    "platform-dev": {
-        "php": "*"
-    },
+    "platform-dev": [],
     "plugin-api-version": "2.0.0"
 }

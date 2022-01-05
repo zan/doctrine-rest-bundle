@@ -17,7 +17,8 @@
         "symfony/framework-bundle": "5.4.*",
         "symfony/proxy-manager-bridge": "5.4.*",
         "symfony/runtime": "5.4.*",
-        "symfony/yaml": "5.4.*"
+        "symfony/yaml": "5.4.*",
+        "zan/common-bundle": "dev-main"
     },
     "require-dev": {
         "doctrine/doctrine-fixtures-bundle": "^3.4"
