@@ -36,10 +36,12 @@ class ResultSetFilter
         // in the WHERE part of the query
         $fieldName = $this->resolveProperty($this->property, $qb);
 
-        $dqlSafeValue = $qb->getEntityManager()->getConnection()->quote($this->value);
+        //$dqlSafeValue = $qb->getEntityManager()->getConnection()->quote($this->value);
+        $parameterName = $qb->generateUniqueParameterName($fieldName);
 
         if ($this->operator == '=') {
-            $qb->andWhere($fieldName . ' = ' . $dqlSafeValue);
+            $qb->andWhere("$fieldName = :$parameterName");
+            $qb->setParameter($parameterName, $this->value);
         }
     }
 
