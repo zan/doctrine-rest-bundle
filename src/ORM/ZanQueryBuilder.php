@@ -10,9 +10,25 @@ use Doctrine\ORM\QueryBuilder;
  */
 class ZanQueryBuilder extends QueryBuilder
 {
-    /** @var JoinedEntity[] */
-    private $joinedEntities;
+    /**
+     * @var array Map of left join hashes that have already been added (see overridden leftJoin())
+     */
+    private array $leftJoinHashes = [];
 
+    private int $uniqueParamCounter = 1;
+
+    /**
+     * Returns a unique parameter name that can be bound in the query without conflicting with other parameters
+     */
+    public function generateUniqueParameterName($prefix = null): string
+    {
+        $prefix = $prefix ?? 'value';
+
+        // Replace invalid characters in prefix with an underscore
+        $prefix = str_replace('.', '_', $prefix);
+
+        return $prefix . $this->uniqueParamCounter++;
+    }
 
     public function getRootEntityNamespace(): string
     {
@@ -50,6 +66,15 @@ class ZanQueryBuilder extends QueryBuilder
      */
     public function leftJoin($join, $alias, $conditionType = null, $condition = null, $indexBy = null)
     {
-        parent::leftJoin($join, $alias, $conditionType, $condition, $indexBy);
+        $joinHash = $join . '-' . $alias;
+
+        if ($this->hasLeftJoin($joinHash)) return;
+
+        return parent::leftJoin($join, $alias, $conditionType, $condition, $indexBy);
+    }
+
+    protected function hasLeftJoin($joinHash)
+    {
+        return array_key_exists($joinHash, $this->leftJoinHashes);
     }
 }
