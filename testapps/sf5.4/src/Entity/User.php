@@ -43,6 +43,12 @@ class User
      */
     protected $userGroupMappings;
 
+    /**
+     * @ORM\ManyToOne(targetEntity="Group")
+     * @ORM\JoinColumn(referencedColumnName="id")
+     */
+    protected ?Group $defaultGroup;
+
     public function __construct(string $username)
     {
         $this->username = $username;
@@ -51,8 +57,18 @@ class User
     }
 
     /**
-     * @return int|null
+     * @return Group[]
      */
+    public function getGroups()
+    {
+        $groups = [];
+        foreach ($this->userGroupMappings as $userGroup) {
+            $groups[] = $userGroup->getGroup();
+        }
+
+        return $groups;
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -86,5 +102,15 @@ class User
     public function setNumFailedLogins(int $numFailedLogins): void
     {
         $this->numFailedLogins = $numFailedLogins;
+    }
+
+    public function getDefaultGroup(): ?Group
+    {
+        return $this->defaultGroup;
+    }
+
+    public function setDefaultGroup(?Group $defaultGroup): void
+    {
+        $this->defaultGroup = $defaultGroup;
     }
 }
