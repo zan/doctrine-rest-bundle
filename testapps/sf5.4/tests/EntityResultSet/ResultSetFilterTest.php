@@ -54,6 +54,26 @@ class ResultSetFilterTest extends KernelTestCase
         }
     }
 
+    public function testStringIn(): void
+    {
+        $usernamesIn = ['test1', 'test2'];
+
+        $filters = ResultSetFilterCollection::buildFromArray([
+            [
+                'property' => 'username',
+                'operator' => 'in',
+                'value' => $usernamesIn,
+            ],
+        ]);
+
+        $entities = $this->getResults($filters, User::class);
+
+        $this->assertCount(2, $entities);
+        foreach ($entities as $user) {
+            if (!in_array($user->getUsername(), $usernamesIn)) $this->fail('Unexpected user found');
+        }
+    }
+
     /**
      * Helper method to create a GenericEntityResultSet and apply a $filterCollection
      */

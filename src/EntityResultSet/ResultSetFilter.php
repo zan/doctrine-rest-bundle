@@ -25,6 +25,8 @@ class ResultSetFilter
 
     public function __construct(string $property, $value, string $operator = '=')
     {
+        $this->mustBeSupportedOperator($operator);
+
         $this->property = $property;
         $this->value = $value;
         $this->operator = $operator;
@@ -39,8 +41,12 @@ class ResultSetFilter
         //$dqlSafeValue = $qb->getEntityManager()->getConnection()->quote($this->value);
         $parameterName = $qb->generateUniqueParameterName($fieldName);
 
-        if ($this->operator == '=') {
+        if ('=' === $this->operator) {
             $qb->andWhere("$fieldName = :$parameterName");
+            $qb->setParameter($parameterName, $this->value);
+        }
+        if ('in' === $this->operator) {
+            $qb->andWhere("$fieldName in (:$parameterName)");
             $qb->setParameter($parameterName, $this->value);
         }
     }
@@ -95,6 +101,15 @@ class ResultSetFilter
         return $entityNamespace . '_' . $property;
     }
 
+    protected function mustBeSupportedOperator($operator)
+    {
+        $supported = ['=', 'in'];
+
+        if (!in_array($operator, $supported)) {
+            throw new \InvalidArgumentException('Operator must be one of: ' . join(', ', $supported));
+        }
+    }
+
     public function getProperty(): string
     {
         return $this->property;
@@ -112,6 +127,7 @@ class ResultSetFilter
 
     public function setOperator(string $operator): void
     {
+        $this->mustBeSupportedOperator($operator);
         $this->operator = $operator;
     }
 
