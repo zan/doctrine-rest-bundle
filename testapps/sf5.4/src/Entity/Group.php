@@ -39,4 +39,14 @@ class Group
 
         $this->groupUserMappings = new ArrayCollection();
     }
+
+    public function getLabel(): string
+    {
+        return $this->label;
+    }
+
+    public function setLabel(string $label): void
+    {
+        $this->label = $label;
+    }
 }
