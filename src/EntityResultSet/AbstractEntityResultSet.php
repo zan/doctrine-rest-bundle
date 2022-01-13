@@ -172,7 +172,7 @@ abstract class AbstractEntityResultSet
 
         // Check for soft delete support
         if ($this->entitySupportsSoftDelete()) {
-            $qb->andWhere('e.isDeleted = false');
+            $qb->andWhere('e.deletedAt > CURRENT_TIMESTAMP() OR e.deletedAt IS NULL');
         }
 
         $this->dataFilterCollection->applyToQueryBuilder($qb);
@@ -227,9 +227,9 @@ abstract class AbstractEntityResultSet
 
     protected function entitySupportsSoftDelete()
     {
-        // todo: use entity metadata to make sure 'isDeleted' is a column
+        // todo: check for Gedmo\SoftDeleteable annotation
         try {
-            ZanObject::getProperty($this->entityClassName, 'isDeleted');
+            ZanObject::getProperty($this->entityClassName, 'deletedAt');
             return true;
         } catch (\ErrorException $e) {
 
