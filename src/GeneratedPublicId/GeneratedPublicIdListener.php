@@ -26,7 +26,7 @@ class GeneratedPublicIdListener
         }
 
         // Apply state to entity
-        $entity->applyGeneratedIdState($publicIdStateEntry);
+        $entity->applyGeneratedPublicIdState($publicIdStateEntry);
         
         $em->flush();
     }
