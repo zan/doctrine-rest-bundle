@@ -50,4 +50,15 @@ class EntityPropertyMetadata
             $this->targetEntityClass = $this->doctrineMetadata['targetEntity'];
         }
     }
+
+    /**
+     * Returns true if this property is a "to many" association such as "one to many" or "many to many"
+     */
+    public function isToManyAssociation()
+    {
+        if (ClassMetadata::ONE_TO_MANY === $this->doctrineMetadata['type']) return true;
+        if (ClassMetadata::MANY_TO_MANY === $this->doctrineMetadata['type']) return true;
+
+        return false;
+    }
 }
