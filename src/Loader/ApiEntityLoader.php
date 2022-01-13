@@ -51,10 +51,6 @@ class ApiEntityLoader
             }
         }
 
-        dump($constructorArgs);
-
-        // todo: call entity constructor and load
-        // todo: constructor args
         $reflectionClass = new \ReflectionClass($entityClassName);
         $newEntity = $reflectionClass->newInstanceArgs($constructorArgs);
 
@@ -76,7 +72,9 @@ class ApiEntityLoader
             if (!$propertyMetadata->exists) continue;
 
             // Skip properties that the user cannot edit
-            if (!$this->canEdit($entity, $propertyName)) continue;
+            if (!$this->canEdit($entity, $propertyName)) {
+                continue;
+            }
 
             $resolvedValue = $this->resolveValue($value, $propertyMetadata);
             ZanObject::setProperty($entity, $propertyName, $resolvedValue);
@@ -111,7 +109,18 @@ class ApiEntityLoader
         }
 
         if ('entity' === $propertyMetadata->dataType) {
-            return $this->resolveEntity($propertyMetadata->targetEntityClass, $rawValue);
+            // Multi-value association and $rawValue is an array, eg. OneToMany or ManyToMany
+            if ($propertyMetadata->isToManyAssociation() && is_array($rawValue)) {
+                $resolvedEntities = [];
+                foreach ($rawValue as $entityId) {
+                    $resolvedEntities[] = $this->resolveEntity($propertyMetadata->targetEntityClass, $entityId);
+                }
+                return $resolvedEntities;
+            }
+            // A single entity, eg. ManyToOne or OneToOne
+            else {
+                return $this->resolveEntity($propertyMetadata->targetEntityClass, $rawValue);
+            }
         }
 
         throw new \InvalidArgumentException('No way to handle value for ' . $propertyMetadata->name . ' (' . $propertyMetadata->dataType . ')');
