@@ -3,7 +3,10 @@
 namespace Zan\DoctrineRestBundle\Response;
 
 use Symfony\Component\Workflow\StateMachine;
+use Symfony\Component\Workflow\Transition;
+use Symfony\Component\Workflow\TransitionBlocker;
 use Symfony\Component\Workflow\Workflow;
+use function Symfony\Component\Translation\t;
 
 /**
  * Helper class for serializing a workflow
@@ -42,20 +45,58 @@ class WorkflowResponse
             $places[] = $placeData;
         }
 
-        $enabledTransitions = [];
-        foreach ($this->workflow->getEnabledTransitions($this->entity) as $transition) {
-            $enabledTransitions[] = [
+        $validGraphTransitions = [];
+
+        foreach ($this->workflow->getDefinition()->getTransitions() as $transition) {
+            // Do not include transitions that are not valid state transitions
+            if (!$this->canTransitionViaGraph($transition, $this->entity)) continue;
+
+            $blockers = $this->workflow->buildTransitionBlockerList($this->entity, $transition->getName());
+
+            $serialized = [
                 'name' => $transition->getName(),
                 'froms' => $transition->getFroms(),
                 'tos' => $transition->getTos(),
             ];
+
+            $serializedBlockers = $this->serializeTransitionBlockers($blockers);
+            if ($serializedBlockers !== null) $serialized['blockers'] = $serializedBlockers;
+
+            $validGraphTransitions[] = $serialized;
         }
 
         return [
             'name' => $this->workflow->getName(),
             'marking' => $marking,
             'places' => $places,
-            'enabledTransitions' => $enabledTransitions,
+            'validGraphTransitions' => $validGraphTransitions,
         ];
+    }
+
+    protected function canTransitionViaGraph(Transition $transition, $entity)
+    {
+        // Returns an array like IN_PROCESS => 1 so must call array_keys to get array of place strings
+        $currentPlaces = array_keys($this->workflow->getMarking($entity)->getPlaces());
+
+        foreach ($transition->getFroms() as $from) {
+            if (in_array($from, $currentPlaces)) return true;
+        }
+
+        return false;
+    }
+
+    protected function serializeTransitionBlockers($blockers)
+    {
+        $serialized = [];
+        /** @var TransitionBlocker $blocker */
+        foreach ($blockers as $blocker) {
+            $serialized[] = [
+                'code' => $blocker->getCode(),
+                'message' => $blocker->getMessage(),
+                'parameters' => $blocker->getParameters(),
+            ];
+        }
+
+        return $serialized ? $serialized : null;
     }
 }
