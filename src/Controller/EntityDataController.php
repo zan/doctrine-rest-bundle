@@ -78,6 +78,9 @@ class EntityDataController extends AbstractController
         if ($request->query->has('limit')) {
             $resultSet->setMaxNumResults($request->query->get('limit'));
         }
+        if ($request->query->has('sort')) {
+            $this->applySortParameter($resultSet, $request->query->get('sort'));
+        }
 
         $entitySerializer = new MinimalEntitySerializer(
             $em,
@@ -384,6 +387,14 @@ class EntityDataController extends AbstractController
 
         // todo: permission checks
         return new JsonResponse(['success' => true]);
+    }
+
+    protected function applySortParameter(AbstractEntityResultSet $resultSet, $rawFilter)
+    {
+        $decoded = json_decode($rawFilter, true);
+        foreach ($decoded as $rawSort) {
+            $resultSet->addOrderBy($rawSort['property'], $rawSort['direction']);
+        }
     }
 
     protected function unescapeEntityId($escapedEntityId)

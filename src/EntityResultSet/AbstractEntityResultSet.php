@@ -52,8 +52,16 @@ abstract class AbstractEntityResultSet
      */
     protected $filterExprs = [];
 
+    /**
+     * todo: better docs, make into value object?
+     * @var array keys are 'property' and 'direction' (ASC, DESC)
+     */
+    protected $orderBys = [];
+
     protected $firstResultOffset = 0;
     protected $maxNumResults = 100;
+
+    protected ZanQueryBuilder $qb;
 
     protected ResultSetFilterCollection $dataFilterCollection;
 
@@ -67,6 +75,13 @@ abstract class AbstractEntityResultSet
         $this->entityClassName = $entityClassName;
         $this->entityMetadata = $em->getClassMetadata($entityClassName);
 
+        // todo: move to initializeQueryBuilder method so it can be called multiple times if necessary?
+        $this->qb = new ZanQueryBuilder($em);
+        // todo: partial select support based on field map
+        //$qb->select('partial e.{id, prnOrderId}');
+        $this->qb->select('e');
+        $this->qb->from($this->entityClassName, 'e');
+
         $this->resultSetParameters = [];
         $this->dqlParameters = [];
         $this->dataFilterCollection = new ResultSetFilterCollection();
@@ -77,7 +92,7 @@ abstract class AbstractEntityResultSet
      */
     public function getResults()
     {
-        $qb = $this->createQueryBuilder();
+        $qb = $this->finalizeQueryBuilder();
 
         $query = $qb->getQuery();
 
@@ -90,7 +105,7 @@ abstract class AbstractEntityResultSet
 
     public function getPagedResult(): Paginator
     {
-        $qb = $this->createQueryBuilder();
+        $qb = $this->finalizeQueryBuilder();
 
         $query = $qb->getQuery()
             ->setFirstResult($this->firstResultOffset)
@@ -181,16 +196,11 @@ abstract class AbstractEntityResultSet
     }
 
     /**
-     * todo: probably shouldn't be public, have some other way of debugging?
-     * @return QueryBuilder
+     * todo: ensure this method is only called once
      */
-    public function createQueryBuilder()
+    protected function finalizeQueryBuilder(): ZanQueryBuilder
     {
-        $qb = $this->getBaseQueryBuilder();
-        // todo: partial select support based on field map
-        //$qb->select('partial e.{id, prnOrderId}');
-        $qb->select('e');
-        $qb->from($this->entityClassName, 'e');
+        $qb = $this->qb;
 
         // Add additional expressions
         foreach ($this->filterExprs as $expr) {
@@ -217,13 +227,19 @@ abstract class AbstractEntityResultSet
             $qb->setParameter($name, $value);
         }
 
+        $this->applyOrderBys($qb);
+
         //dump($qb->getDQL());
         return $qb;
     }
 
-    protected function getBaseQueryBuilder() : ZanQueryBuilder
+    protected function applyOrderBys(ZanQueryBuilder $qb)
     {
-        return new ZanQueryBuilder($this->em);
+        foreach ($this->orderBys as $rawOrderBy) {
+            // NOTE: property already includes the alias, eg. e.requestedBy
+            dump($rawOrderBy['property']);
+            $qb->addOrderBy($rawOrderBy['property'], $rawOrderBy['direction']);
+        }
     }
 
     protected function applyPermissionsFilters(QueryBuilder $qb)
@@ -316,5 +332,15 @@ abstract class AbstractEntityResultSet
     public function setMaxNumResults(int $maxNumResults): void
     {
         $this->maxNumResults = $maxNumResults;
+    }
+
+    public function addOrderBy(string $property, string $direction = 'ASC')
+    {
+        // Normalize property to something that can be sorted in DQL
+        $resolvedProperty = $this->qb->resolveProperty($property);
+        // todo: useful exception if this can't be resolved
+
+        // todo: check for duplicates?
+        $this->orderBys[] = [ 'property' => $resolvedProperty, 'direction' => $direction ];
     }
 }
