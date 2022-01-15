@@ -29,14 +29,27 @@ class MinimalEntitySerializer
         $this->annotationReader = $annotationReader;
     }
 
-    public function serialize($entity, array $serializationMap = []): array
+    public function serialize($entities, array $serializationMap = []): array
     {
-        $fieldMap = new FieldMap($serializationMap);
-        $metadata = $this->em->getClassMetadata(get_class($entity));
+        // If true, this method was called with an array of entities and should return an array response
+        // todo: separate method to serialize an array of entities?
+        $isArrayCall = true;
 
-        $serialized = $this->recursiveSerialize($entity, $fieldMap, '', $metadata);
+        // Ensure we're always working with an array of entities to support one or more
+        if (!is_array($entities)) {
+            $entities = [ $entities ];
+            $isArrayCall = false;
+        }
 
-        return $serialized;
+        $serialized = [];
+        foreach ($entities as $entity) {
+            $fieldMap = new FieldMap($serializationMap);
+            $metadata = $this->em->getClassMetadata(get_class($entity));
+
+            $serialized[] = $this->recursiveSerialize($entity, $fieldMap, '', $metadata);
+        }
+
+        return $isArrayCall ? $serialized : $serialized[0];
     }
 
     protected function recursiveSerialize($entity, FieldMap $fieldMap, $parentPath, ClassMetadata $metadata)
