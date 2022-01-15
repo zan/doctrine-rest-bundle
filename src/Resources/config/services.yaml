@@ -6,3 +6,12 @@ services:
   Zan\DoctrineRestBundle\Controller\:
     resource: '../../Controller'
     tags: ['controller.service_arguments']
+
+  Zan\DoctrineRestBundle\EntitySerializer\MinimalEntitySerializer: ~
+
+  Zan\DoctrineRestBundle\Permissions\PermissionsCalculatorFactory: ~
+
+  #
+  # Public services
+  Zan\DoctrineRestBundle\EntityResultSet\EntityResultSetFactory:
+    public: true
