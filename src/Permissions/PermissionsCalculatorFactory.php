@@ -5,13 +5,14 @@ namespace Zan\DoctrineRestBundle\Permissions;
 
 
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 
 class PermissionsCalculatorFactory
 {
-    /** @var EntityManager */
+    /** @var EntityManagerInterface */
     protected $em;
 
-    public function __construct(EntityManager $em)
+    public function __construct(EntityManagerInterface $em)
     {
         $this->em = $em;
 

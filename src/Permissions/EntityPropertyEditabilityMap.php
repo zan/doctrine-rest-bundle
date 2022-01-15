@@ -46,8 +46,6 @@ class EntityPropertyEditabilityMap
 
     public function processEntity($entity)
     {
-        dump("processing with");
-        dump(get_class($this->permissionsCalculator));
         // Shortcut if we don't have a calculator for some reason
         if (!$this->permissionsCalculator) return;
 
