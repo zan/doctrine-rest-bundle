@@ -3,6 +3,7 @@
 namespace Zan\DoctrineRestBundle\ORM;
 
 use Doctrine\ORM\QueryBuilder;
+use Zan\CommonBundle\Util\ZanString;
 
 /**
  * QueryBuilder with additional features:
@@ -16,6 +17,56 @@ class ZanQueryBuilder extends QueryBuilder
     private array $leftJoinHashes = [];
 
     private int $uniqueParamCounter = 1;
+
+    /**
+     * Resolves a dot-separated property path into a series of joins and returns the join alias to use when comparing
+     * against the field
+     *
+     * For example, "defaultGroup.label" would result in a join of the "defaultGroup" relationshipo and would then
+     * return an alias like "DefaultGroup.label" that could be used to compare against the label value
+     */
+    public function resolveProperty($propertyPath)
+    {
+        $pathQueue = explode('.', $propertyPath);
+
+        // Early exit if there are no dots in the property path since that means it's directly on the entity being queried
+        if (count($pathQueue) === 1) {
+            return 'e.' . $propertyPath;
+        }
+
+        $rootEntity = $this->getRootEntityNamespace();
+        $field = array_pop($pathQueue);
+        $currEntity = $rootEntity;
+        // Start with the entity alias
+        $joinTableName = $this->getRootAlias();
+
+        while (count($pathQueue) > 0) {
+            $currProperty = $pathQueue[0];
+            $joinAlias = $this->buildJoinAlias($currEntity, $currProperty);
+
+            $this->leftJoin($joinTableName . '.' . $currProperty, $joinAlias);
+
+            array_shift($pathQueue);
+            // Update the join table for the next part of the path
+            $joinTableName = $joinAlias;
+        }
+
+        // Use the most recent joinAlias and property to build the path to query on
+        return $joinAlias . '.' . $field;
+    }
+
+    protected function buildJoinAlias(string $entityNamespace, string $property): string
+    {
+        // Remove App\Entity\ prefix to clean things up
+        $entityNamespace = ZanString::removePrefix($entityNamespace, '\\');
+        $entityNamespace = ZanString::removePrefix($entityNamespace, 'App\Entity\\');
+
+        // Replace any remaining slashes with underscores
+        $entityNamespace = str_replace('\\', '_', $entityNamespace);
+
+        // Append property
+        return $entityNamespace . '_' . $property;
+    }
 
     /**
      * Returns a unique parameter name that can be bound in the query without conflicting with other parameters
