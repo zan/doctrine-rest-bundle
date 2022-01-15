@@ -71,6 +71,14 @@ class EntityDataController extends AbstractController
         $resultSet->setActingUser($user);
         $resultSet->setDataFilterCollection($filterCollection);
 
+        // Apply URL parameters to result set
+        if ($request->query->has('start')) {
+            $resultSet->setFirstResultOffset($request->query->get('start'));
+        }
+        if ($request->query->has('limit')) {
+            $resultSet->setMaxNumResults($request->query->get('limit'));
+        }
+
         $entitySerializer = new MinimalEntitySerializer(
             $em,
             $annotationReader
@@ -91,7 +99,8 @@ class EntityDataController extends AbstractController
         // todo: implement canCreateEntity
 
         // Process results
-        foreach ($resultSet->getResults() as $entity) {
+        $pagedResults = $resultSet->getPagedResult();
+        foreach ($pagedResults as $entity) {
             $entities[] = $entitySerializer->serialize($entity, $responseFields);
 
             if ($includeEditability) {
@@ -105,6 +114,7 @@ class EntityDataController extends AbstractController
 
         return new JsonResponse([
             'success' => true,
+            'total' => count($pagedResults),
             'data' => $entities,
             'metadata' => $metadata,
         ]);

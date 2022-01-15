@@ -7,6 +7,7 @@ namespace Zan\DoctrineRestBundle\EntityResultSet;
 use Doctrine\Common\Annotations\Reader;
 use Doctrine\ORM\Mapping\Id;
 use Doctrine\ORM\Query\Expr\Orx;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use Zan\CommonBundle\Util\ZanAnnotation;
 use Zan\CommonBundle\Util\ZanObject;
 use Zan\DoctrineRestBundle\Annotation\HumanReadableId;
@@ -51,6 +52,9 @@ abstract class AbstractEntityResultSet
      */
     protected $filterExprs = [];
 
+    protected $firstResultOffset = 0;
+    protected $maxNumResults = 100;
+
     protected ResultSetFilterCollection $dataFilterCollection;
 
     public function __construct(
@@ -68,10 +72,33 @@ abstract class AbstractEntityResultSet
         $this->dataFilterCollection = new ResultSetFilterCollection();
     }
 
+    /**
+     * @deprecated move to using getResultsPage() or streamResults()
+     */
     public function getResults()
     {
         $qb = $this->createQueryBuilder();
-        return $qb->getQuery()->getResult();
+
+        $query = $qb->getQuery();
+
+        $query->setMaxResults(1000);
+
+        $result = $query->getResult();
+
+        return $result;
+    }
+
+    public function getPagedResult(): Paginator
+    {
+        $qb = $this->createQueryBuilder();
+
+        $query = $qb->getQuery()
+            ->setFirstResult($this->firstResultOffset)
+            ->setMaxResults($this->maxNumResults);
+
+        $paginator = new Paginator($query);
+
+        return $paginator;
     }
 
     public function mustGetSingleResult()
@@ -269,5 +296,25 @@ abstract class AbstractEntityResultSet
     public function setDataFilterCollection(ResultSetFilterCollection $dataFilterCollection): void
     {
         $this->dataFilterCollection = $dataFilterCollection;
+    }
+
+    public function getFirstResultOffset(): int
+    {
+        return $this->firstResultOffset;
+    }
+
+    public function setFirstResultOffset(int $firstResultOffset): void
+    {
+        $this->firstResultOffset = $firstResultOffset;
+    }
+
+    public function getMaxNumResults(): int
+    {
+        return $this->maxNumResults;
+    }
+
+    public function setMaxNumResults(int $maxNumResults): void
+    {
+        $this->maxNumResults = $maxNumResults;
     }
 }
