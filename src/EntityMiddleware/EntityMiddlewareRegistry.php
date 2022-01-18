@@ -26,7 +26,6 @@ class EntityMiddlewareRegistry
         $this->annotationReader = $annotationReader;
 
         foreach ($middlewares as $middleware) {
-            dump("Adding: " . get_class($middleware));
             $this->middlewares[] = $middleware;
         }
     }
