@@ -4,11 +4,15 @@
 namespace Zan\DoctrineRestBundle\Controller;
 
 
+use Modules\PosterPrintingBundle\EntityApi\PosterPrintingRequestMiddleware;
+use Symfony\Component\DependencyInjection\Container;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Workflow\Registry;
 use Zan\CommonBundle\Util\RequestUtils;
 use Zan\CommonBundle\Util\ZanAnnotation;
 use Zan\CommonBundle\Util\ZanArray;
 use Zan\DoctrineRestBundle\Annotation\HumanReadableId;
+use Zan\DoctrineRestBundle\EntityMiddleware\EntityMiddlewareRegistry;
 use Zan\DoctrineRestBundle\EntityResultSet\AbstractEntityResultSet;
 use Zan\DoctrineRestBundle\EntityResultSet\GenericEntityResultSet;
 use Zan\DoctrineRestBundle\EntityResultSet\ResultSetFilter;
@@ -314,10 +318,12 @@ class EntityDataController extends AbstractController
         string $entityId,
         Request $request,
         EntityManagerInterface $em,
-        Reader $annotationReader
+        Reader $annotationReader,
+        EntityMiddlewareRegistry $middlewareRegistry
     ) {
         $entityClassName = $this->unescapeEntityId($entityId);
         $user = $this->container->has('security.token_storage') ? $this->getUser() : null;
+        $middlewares = $middlewareRegistry->getMiddlewaresForEntity($entityClassName);
 
         $permissionsCalculatorFactory = new PermissionsCalculatorFactory($em);
         $permissionsCalculator = $permissionsCalculatorFactory->getPermissionsCalculator($entityClassName);
@@ -339,12 +345,17 @@ class EntityDataController extends AbstractController
         $decodedBody = json_decode($request->getContent(), true);
         $newEntity = $entityLoader->create($entityClassName, $decodedBody);
 
+        // beforeCreate middleware
+        foreach ($middlewares as $middleware) {
+            $middleware->beforeCreate($newEntity);
+        }
+
         // Commit changes to the database
         $em->persist($newEntity);
         $em->flush();
 
         $retData = [
-            'success',
+            'success' => true,
             'data' => $serializer->serialize($newEntity),
         ];
 
