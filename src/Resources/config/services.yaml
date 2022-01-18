@@ -11,6 +11,11 @@ services:
 
   Zan\DoctrineRestBundle\Permissions\PermissionsCalculatorFactory: ~
 
+  Zan\DoctrineRestBundle\EntityMiddleware\EntityMiddlewareRegistry:
+    arguments:
+      - !tagged_iterator zan.drest.entity_middleware
+      - '@annotation_reader'
+
   #
   # Public services
   Zan\DoctrineRestBundle\EntityResultSet\EntityResultSetFactory:
