@@ -11,6 +11,25 @@ use Zan\CommonBundle\Util\ZanEntity;
  */
 class ZanDoctrineCollectionUtils
 {
+    public static function hasItem(Collection $collection, $item)
+    {
+        foreach ($collection as $currItem) {
+            if (ZanEntity::isSame($currItem, $item)) return true;
+        }
+
+        return false;
+    }
+
+    public static function removeItem(Collection $collection, $item)
+    {
+        foreach ($collection as $currItem) {
+            if (ZanEntity::isSame($currItem, $item)) {
+                $collection->removeElement($item);
+                break;
+            }
+        }
+    }
+
     /**
      * Updates the collection so that it only contains $incomingItems
      */
