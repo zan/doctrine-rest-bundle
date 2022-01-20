@@ -81,6 +81,19 @@ class ZanQueryBuilder extends QueryBuilder
         return $prefix . $this->uniqueParamCounter++;
     }
 
+    /**
+     * Ensures $name is a unique parameter within the query builder
+     *
+     * Returns the generated unique $name for use in DQL
+     */
+    public function setParameterUnique($name, $value): string
+    {
+        $uniqueName = $this->generateUniqueParameterName($name);
+        $this->setParameter($uniqueName, $value);
+
+        return $uniqueName;
+    }
+
     public function getRootEntityNamespace(): string
     {
         $rootEntities = $this->getRootEntities();
