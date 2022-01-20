@@ -47,6 +47,7 @@ class EntityDataController extends AbstractController
         Request $request,
         EntityManagerInterface $em,
         Reader $annotationReader,
+        PermissionsCalculatorFactory $permissionsCalculatorFactory
     ) {
         $params = RequestUtils::getParameters($request);
         $responseFields = [];
@@ -56,8 +57,11 @@ class EntityDataController extends AbstractController
         $user = $this->container->has('security.token_storage') ? $this->getUser() : null;
 
         $entityClassName = $this->unescapeEntityId($entityId);
-        $permissionsCalculatorFactory = new PermissionsCalculatorFactory($em);
         $permissionsCalculator = $permissionsCalculatorFactory->getPermissionsCalculator($entityClassName);
+        if (!$permissionsCalculator) {
+            // todo: more informative error message
+            throw new \InvalidArgumentException('This entity is not available for API access');
+        }
 
         if ($request->query->has('includeMetadata')) {
             $includeMetadata = ZanArray::createFromString($params['includeMetadata']);
@@ -103,7 +107,9 @@ class EntityDataController extends AbstractController
                 $user
             );
         }
-        // todo: implement canCreateEntity
+
+        // Filter results based on permissions
+        $resultSet->filterByPermissionsCalculator($permissionsCalculator, $this->getUser());
 
         // Process results
         $pagedResults = $resultSet->getPagedResult();
@@ -137,11 +143,11 @@ class EntityDataController extends AbstractController
         EntityManagerInterface $em,
         Reader $annotationReader,
         Registry $workflowRegistry,
+        PermissionsCalculatorFactory $permissionsCalculatorFactory
     ) {
         $params = RequestUtils::getParameters($request);
         $entityClassName = $this->unescapeEntityId($entityId);
         $user = $this->container->has('security.token_storage') ? $this->getUser() : null;
-        $permissionsCalculatorFactory = new PermissionsCalculatorFactory($em);
         $permissionsCalculator = $permissionsCalculatorFactory->getPermissionsCalculator($entityClassName);
 
         $responseFields = [];
@@ -272,12 +278,12 @@ class EntityDataController extends AbstractController
         string $identifier,
         Request $request,
         EntityManagerInterface $em,
-        Reader $annotationReader
+        Reader $annotationReader,
+        PermissionsCalculatorFactory $permissionsCalculatorFactory
     ) {
         $entityClassName = $this->unescapeEntityId($entityId);
         $user = $this->container->has('security.token_storage') ? $this->getUser() : null;
 
-        $permissionsCalculatorFactory = new PermissionsCalculatorFactory($em);
         $permissionsCalculator = $permissionsCalculatorFactory->getPermissionsCalculator($entityClassName);
 
         $entityLoader = new ApiEntityLoader($em, $user);
@@ -319,13 +325,13 @@ class EntityDataController extends AbstractController
         Request $request,
         EntityManagerInterface $em,
         Reader $annotationReader,
-        EntityMiddlewareRegistry $middlewareRegistry
+        EntityMiddlewareRegistry $middlewareRegistry,
+        PermissionsCalculatorFactory $permissionsCalculatorFactory
     ) {
         $entityClassName = $this->unescapeEntityId($entityId);
         $user = $this->container->has('security.token_storage') ? $this->getUser() : null;
         $middlewares = $middlewareRegistry->getMiddlewaresForEntity($entityClassName);
 
-        $permissionsCalculatorFactory = new PermissionsCalculatorFactory($em);
         $permissionsCalculator = $permissionsCalculatorFactory->getPermissionsCalculator($entityClassName);
 
         $entityLoader = new ApiEntityLoader($em, $user);

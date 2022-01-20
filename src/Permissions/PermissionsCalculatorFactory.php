@@ -4,40 +4,51 @@
 namespace Zan\DoctrineRestBundle\Permissions;
 
 
+use Doctrine\Common\Annotations\Reader;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
+use Zan\CommonBundle\Util\ZanAnnotation;
+use Zan\DoctrineRestBundle\Annotation\ApiPermissions;
 
 class PermissionsCalculatorFactory
 {
     /** @var EntityManagerInterface */
     protected $em;
 
-    public function __construct(EntityManagerInterface $em)
-    {
+    /** @var Reader */
+    protected $annotationReader;
+
+    public function __construct(
+        EntityManagerInterface $em,
+        Reader $annotationReader
+    ) {
         $this->em = $em;
+        $this->annotationReader = $annotationReader;
 
         return $this;
     }
 
     public function getPermissionsCalculator($entityClassName): ?PermissionsCalculatorInterface
     {
-        $calculator = null;
-        $this->entityMetadata = $this->em->getClassMetadata($entityClassName);
-
-        $checkClasses = array_merge(
-            [ $entityClassName ],
-            $this->entityMetadata->parentClasses
+        /** @var ApiPermissions $apiPermissionsAnnotation */
+        $apiPermissionsAnnotation = ZanAnnotation::getClassAnnotation(
+            $this->annotationReader,
+            ApiPermissions::class,
+            $entityClassName
         );
+        if (!$apiPermissionsAnnotation) return null;
 
-        foreach ($checkClasses as $className) {
-            // todo: better parsing
-            $permissionsClassName = str_replace('Entity', 'EntityApi', $className);
-            $permissionsClassName = $permissionsClassName . 'Permissions';
-            if (class_exists($permissionsClassName)) {
-                $calculator = new $permissionsClassName;
-                break;
-            }
+        // If there's a permissions class, return it
+        // todo: this should work with services
+        if ($apiPermissionsAnnotation->getPermissionsClass()) {
+            $classNamespace = $apiPermissionsAnnotation->getPermissionsClass();
+            return new $classNamespace;
         }
+
+        // Otherwise, build a generic calculator based off information in the annotations
+        $calculator = new GenericPermissionsCalculator();
+        $calculator->setReadAbilities($apiPermissionsAnnotation->getReadAbilities());
+        $calculator->setWriteAbilities($apiPermissionsAnnotation->getWriteAbilities());
 
         return $calculator;
     }

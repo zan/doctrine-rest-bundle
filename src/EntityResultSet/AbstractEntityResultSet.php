@@ -96,8 +96,6 @@ abstract class AbstractEntityResultSet
 
         $query = $qb->getQuery();
 
-        $query->setMaxResults(1000);
-
         $result = $query->getResult();
 
         return $result;
@@ -214,9 +212,6 @@ abstract class AbstractEntityResultSet
 
         $this->dataFilterCollection->applyToQueryBuilder($qb);
 
-        // Apply permissions filters, if present
-        $this->applyPermissionsFilters($qb);
-
         // Add additional filters from external sources
         foreach ($this->additionalFilters as $additionalFilter) {
             $qb->andWhere($additionalFilter);
@@ -233,38 +228,17 @@ abstract class AbstractEntityResultSet
         return $qb;
     }
 
+    public function filterByPermissionsCalculator(PermissionsCalculatorInterface $calculator, $actingUser)
+    {
+        $calculator->filterQueryBuilder($this->qb, $actingUser);
+    }
+
     protected function applyOrderBys(ZanQueryBuilder $qb)
     {
         foreach ($this->orderBys as $rawOrderBy) {
             // NOTE: property already includes the alias, eg. e.requestedBy
             dump($rawOrderBy['property']);
             $qb->addOrderBy($rawOrderBy['property'], $rawOrderBy['direction']);
-        }
-    }
-
-    protected function applyPermissionsFilters(QueryBuilder $qb)
-    {
-        $permsCalculator = (new PermissionsCalculatorFactory($qb->getEntityManager()))
-            ->getPermissionsCalculator($this->entityClassName);
-
-        // No registered permissions classes
-        if (null === $permsCalculator) return;
-
-        // todo: interface
-        /** @var $permsCalculator PermissionsCalculatorInterface */
-
-        $permExpr = $permsCalculator->getViewExpr($qb, $this->getActingUser());
-
-        // Default to allowing view, so a return value of true (or no return value) means do not filter the QB
-        if ($permExpr === true || $permExpr === null) return;
-
-        // false means the user has no permissions, so short circuit the query
-        if ($permExpr === false) {
-            $qb->andWhere('0 = 1');
-        }
-        // Calculator has specified a complex expression to apply
-        else {
-            $qb->andWhere($permExpr);
         }
     }
 
