@@ -76,6 +76,7 @@ class EntityDataController extends AbstractController
         }
 
         $resultSet = new GenericEntityResultSet($entityClassName, $em, $annotationReader);
+        $resultSet->fetchJoinProperties($responseFields);
         $resultSet->setActingUser($user);
         $resultSet->setDataFilterCollection($filterCollection);
 
