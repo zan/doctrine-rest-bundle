@@ -32,13 +32,19 @@ class ResultSetFilter
         $this->operator = $operator;
     }
 
-    public function applyToQueryBuilder(QueryBuilder $qb)
+    public function applyToQueryBuilder(ZanQueryBuilder $qb)
     {
-        // This method joins any necessary tables and returns a field name that can be used
-        // in the WHERE part of the query
-        $fieldName = $qb->resolveProperty($this->property);
-
-        //$dqlSafeValue = $qb->getEntityManager()->getConnection()->quote($this->value);
+        $fieldName = null;
+        // A dot in the property means this is a nested assocation that needs to be resolved
+        if (str_contains($this->property, '.')) {
+            $fieldName = $qb->resolveProperty($this->property)->getQueryAlias();
+        }
+        // Otherwise, it's a simple field directly on the entity
+        else {
+            // The field name in the query needs to have the root alias prepended, eg e.status instead of just 'status'
+            $fieldName = $qb->getRootAlias() . '.' . $this->property;
+        }
+        
         $parameterName = $qb->generateUniqueParameterName($fieldName);
 
         if ('=' === $this->operator) {

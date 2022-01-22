@@ -94,7 +94,9 @@ abstract class AbstractEntityResultSet
     {
         $qb = $this->finalizeQueryBuilder();
 
-        $query = $qb->getQuery();
+        $query = $qb->getQuery()
+            ->setFirstResult($this->firstResultOffset)
+            ->setMaxResults($this->maxNumResults);
 
         $result = $query->getResult();
 
@@ -120,6 +122,16 @@ abstract class AbstractEntityResultSet
         if (count($results) !== 1) throw new \ErrorException('Expected exactly 1 result, got ' . count($results));
 
         return $results[0];
+    }
+
+    public function fetchJoinProperties(array $propertyPaths)
+    {
+        foreach ($propertyPaths as $propertyPath) {
+            $resolvedProperty = $this->qb->resolveProperty($propertyPath);
+            foreach ($resolvedProperty->getJoinedAliases() as $joinedAlias) {
+                $this->qb->addSelect($joinedAlias);
+            }
+        }
     }
 
     /**
@@ -237,7 +249,6 @@ abstract class AbstractEntityResultSet
     {
         foreach ($this->orderBys as $rawOrderBy) {
             // NOTE: property already includes the alias, eg. e.requestedBy
-            dump($rawOrderBy['property']);
             $qb->addOrderBy($rawOrderBy['property'], $rawOrderBy['direction']);
         }
     }
@@ -311,10 +322,20 @@ abstract class AbstractEntityResultSet
     public function addOrderBy(string $property, string $direction = 'ASC')
     {
         // Normalize property to something that can be sorted in DQL
-        $resolvedProperty = $this->qb->resolveProperty($property);
+        $fieldName = null;
+        // A dot in the property means this is a nested assocation that needs to be resolved
+        if (str_contains($property, '.')) {
+            $fieldName = $this->qb->resolveProperty($property)->getQueryAlias();
+        }
+        // Otherwise, it's a simple field directly on the entity
+        else {
+            // The field name in the query needs to have the root alias prepended, eg e.status instead of just 'status'
+            $fieldName = $this->qb->getRootAlias() . '.' . $property;
+        }
+
         // todo: useful exception if this can't be resolved
 
         // todo: check for duplicates?
-        $this->orderBys[] = [ 'property' => $resolvedProperty, 'direction' => $direction ];
+        $this->orderBys[] = [ 'property' => $fieldName, 'direction' => $direction ];
     }
 }
