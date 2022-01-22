@@ -25,24 +25,26 @@ class ZanQueryBuilder extends QueryBuilder
      * For example, "defaultGroup.label" would result in a join of the "defaultGroup" relationshipo and would then
      * return an alias like "DefaultGroup.label" that could be used to compare against the label value
      */
-    public function resolveProperty($propertyPath)
+    public function resolveProperty($propertyPath): ResolvedProperty
     {
         $pathQueue = explode('.', $propertyPath);
 
         // Early exit if there are no dots in the property path since that means it's directly on the entity being queried
         if (count($pathQueue) === 1) {
-            return 'e.' . $propertyPath;
+            //return new ResolvedProperty('e.' . $propertyPath);
         }
 
         $rootEntity = $this->getRootEntityNamespace();
-        $field = array_pop($pathQueue);
+        //$field = array_pop($pathQueue);
+        $field = $pathQueue[count($pathQueue)-1];
         $currEntity = $rootEntity;
         // Start with the entity alias
         $joinTableName = $this->getRootAlias();
 
+        $resolvedProperty = new ResolvedProperty();
         while (count($pathQueue) > 0) {
             $currProperty = $pathQueue[0];
-            $joinAlias = $this->buildJoinAlias($currEntity, $currProperty);
+            $joinAlias = $this->buildJoinAlias($currEntity, $currProperty, $resolvedProperty);
 
             $this->leftJoin($joinTableName . '.' . $currProperty, $joinAlias);
 
@@ -51,11 +53,16 @@ class ZanQueryBuilder extends QueryBuilder
             $joinTableName = $joinAlias;
         }
 
-        // Use the most recent joinAlias and property to build the path to query on
-        return $joinAlias . '.' . $field;
+        // The most recent joinAlias and property can be used to query on the property in DQL
+        //$resolvedProperty->setQueryAlias($joinAlias . '.' . $field);
+        $resolvedProperty->setQueryAlias($joinAlias);
+//        dump("Join alias: " . $joinAlias);
+//        $resolvedProperty->setQueryAlias($joinAlias);
+
+        return $resolvedProperty;
     }
 
-    protected function buildJoinAlias(string $entityNamespace, string $property): string
+    protected function buildJoinAlias(string $entityNamespace, string $property, ResolvedProperty $resolvedProperty = null): string
     {
         // Remove App\Entity\ prefix to clean things up
         $entityNamespace = ZanString::removePrefix($entityNamespace, '\\');
@@ -64,8 +71,13 @@ class ZanQueryBuilder extends QueryBuilder
         // Replace any remaining slashes with underscores
         $entityNamespace = str_replace('\\', '_', $entityNamespace);
 
-        // Append property
-        return $entityNamespace . '_' . $property;
+        // The alias is the namespace and property
+        $joinAlias = $entityNamespace . '_' . $property;
+
+        // If there's a $resolvedProperty update it with this join alias
+        if ($resolvedProperty) $resolvedProperty->addJoinAlias($joinAlias);
+
+        return $joinAlias;
     }
 
     /**
@@ -104,6 +116,16 @@ class ZanQueryBuilder extends QueryBuilder
         return $rootEntities[0];
     }
 
+    public function getRootAlias(): string
+    {
+        $rootAliases = $this->getRootAliases();
+        if (count($rootAliases) !== 1) {
+            throw new \ErrorException('getRootAlias called on a queryBuilder with ' . count($rootAliases) . ' root aliases');
+        }
+
+        return $rootAliases[0];
+    }
+
     /**
      * OVERRIDDEN to prevent duplicate joins
      *
@@ -134,6 +156,7 @@ class ZanQueryBuilder extends QueryBuilder
 
         if ($this->hasLeftJoin($joinHash)) return;
 
+        $this->leftJoinHashes[$joinHash] = true;
         return parent::leftJoin($join, $alias, $conditionType, $condition, $indexBy);
     }
 
