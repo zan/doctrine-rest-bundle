@@ -11,6 +11,7 @@ use Symfony\Component\Workflow\Registry;
 use Zan\CommonBundle\Util\RequestUtils;
 use Zan\CommonBundle\Util\ZanAnnotation;
 use Zan\CommonBundle\Util\ZanArray;
+use Zan\CommonBundle\Util\ZanDebug;
 use Zan\DoctrineRestBundle\Annotation\HumanReadableId;
 use Zan\DoctrineRestBundle\EntityMiddleware\EntityMiddlewareRegistry;
 use Zan\DoctrineRestBundle\EntityResultSet\AbstractEntityResultSet;
@@ -76,7 +77,6 @@ class EntityDataController extends AbstractController
         }
 
         $resultSet = new GenericEntityResultSet($entityClassName, $em, $annotationReader);
-        $resultSet->fetchJoinProperties($responseFields);
         $resultSet->setActingUser($user);
         $resultSet->setDataFilterCollection($filterCollection);
 
@@ -329,9 +329,17 @@ class EntityDataController extends AbstractController
         EntityMiddlewareRegistry $middlewareRegistry,
         PermissionsCalculatorFactory $permissionsCalculatorFactory
     ) {
+        $params = RequestUtils::getParameters($request);
         $entityClassName = $this->unescapeEntityId($entityId);
         $user = $this->container->has('security.token_storage') ? $this->getUser() : null;
         $middlewares = $middlewareRegistry->getMiddlewaresForEntity($entityClassName);
+
+        $responseFields = [];
+        if ($request->query->has('responseFields')) {
+            $responseFields = ZanArray::createFromString($params['responseFields']);
+        }
+
+        if (!$entityClassName) throw new \InvalidArgumentException('entityClassName is required');
 
         $permissionsCalculator = $permissionsCalculatorFactory->getPermissionsCalculator($entityClassName);
 
@@ -345,6 +353,11 @@ class EntityDataController extends AbstractController
 
         // Deny access unless there's a calculator that specifically permits access
         if (!$permissionsCalculator || !$permissionsCalculator->canCreateEntity($entityClassName, $user)) {
+            $prnPermissionsCalculator = '<NULL>';
+            if ($permissionsCalculator) $prnPermissionsCalculator = get_class($permissionsCalculator);
+            ZanDebug::dump("Using permissions calculator class: " . $prnPermissionsCalculator);
+            ZanDebug::dump("Entity class name: " . $entityClassName);
+            ZanDebug::dump("User: " . $user->getUsername());
             // todo: better exception here
             throw new \InvalidArgumentException('User does not have permissions to create entity');
         }
@@ -363,7 +376,7 @@ class EntityDataController extends AbstractController
 
         $retData = [
             'success' => true,
-            'data' => $serializer->serialize($newEntity),
+            'data' => $serializer->serialize($newEntity, $responseFields),
         ];
 
         return new JsonResponse($retData);
@@ -377,12 +390,12 @@ class EntityDataController extends AbstractController
         string $identifier,
         Request $request,
         EntityManagerInterface $em,
-        Reader $annotationReader
+        Reader $annotationReader,
+        PermissionsCalculatorFactory $permissionsCalculatorFactory
     ) {
         $entityClassName = $this->unescapeEntityId($entityId);
         $user = $this->container->has('security.token_storage') ? $this->getUser() : null;
 
-        $permissionsCalculatorFactory = new PermissionsCalculatorFactory($em);
         $permissionsCalculator = $permissionsCalculatorFactory->getPermissionsCalculator($entityClassName);
 
         // Identifier in the query string overrides one in the route
