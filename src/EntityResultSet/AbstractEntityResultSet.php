@@ -124,6 +124,16 @@ abstract class AbstractEntityResultSet
         return $results[0];
     }
 
+    /**
+     * @deprecated this seems to cause several odd issues
+     *
+     * - queries are actually slower with automatic fetch joining
+     *
+     * - doctrine seems to retrieve null results, eg. this API request:
+     *      /api/zan/drest/entity/App.Entity.Role?responseFields=roleUserMappings&responseFields=roleUserMappings.user
+     *      results in doctrine trying to load an AppUserRole entity with all null values, resulting in a type violoation
+     *      for entityVersion
+     */
     public function fetchJoinProperties(array $propertyPaths)
     {
         foreach ($propertyPaths as $propertyPath) {
