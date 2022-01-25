@@ -19,14 +19,14 @@ use Doctrine\ORM\Mapping\Annotation;
 class ApiPermissions implements Annotation
 {
     private $readSpecification = null;
-    private $writeSecification = null;
+    private $writeSpecification = null;
 
     private ?string $permissionsClass;
 
     public function __construct($read = [], $write = [], string $class = null)
     {
         $this->readSpecification = is_array($read) ? $read : [ $read ];
-        $this->writeSecification = is_array($write) ? $write : [ $write ];
+        $this->writeSpecification = is_array($write) ? $write : [ $write ];
 
         $this->permissionsClass = $class;
     }
@@ -43,6 +43,6 @@ class ApiPermissions implements Annotation
 
     public function getWriteAbilities()
     {
-        return $this->writeSecification;
+        return $this->writeSpecification;
     }
 }
