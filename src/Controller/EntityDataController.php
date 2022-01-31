@@ -143,8 +143,8 @@ class EntityDataController extends AbstractController
         Request $request,
         EntityManagerInterface $em,
         Reader $annotationReader,
-        Registry $workflowRegistry,
-        PermissionsCalculatorFactory $permissionsCalculatorFactory
+        PermissionsCalculatorFactory $permissionsCalculatorFactory,
+        Registry $workflowRegistry = null
     ) {
         $params = RequestUtils::getParameters($request);
         $entityClassName = $this->unescapeEntityId($entityId);
@@ -191,9 +191,7 @@ class EntityDataController extends AbstractController
 
         $resultSet = new GenericEntityResultSet($entityClassName, $em, $annotationReader);
         $resultSet->setActingUser($user);
-
-        // Apply identifier filter
-        $this->applyIdentifierFilter($resultSet, $identifier, $em, $annotationReader);
+        $resultSet->addIdentifierFilter($identifier);
 
         $entity = $resultSet->mustGetSingleResult();
 
@@ -232,43 +230,6 @@ class EntityDataController extends AbstractController
         $workflow = $workflowRegistry->get($entity);
 
         return (new WorkflowResponse($workflow, $entity))->toArray();
-    }
-
-    /**
-     * todo: moved to AbstractEntityResultSet
-     */
-    protected function applyIdentifierFilter(
-        GenericEntityResultSet $resultSet,
-        $identifier,
-        EntityManagerInterface $em,
-        Reader $annotationReader,
-    ) {
-        $expr = $em->getExpressionBuilder();
-
-        $identifiersExpr = new Orx();
-
-        foreach ($resultSet->getEntityProperties() as $property) {
-            $hasDoctrineId = ZanAnnotation::hasPropertyAnnotation(
-                $annotationReader,
-                Id::class,
-                $resultSet->getEntityClassName(),
-                $property->name
-            );
-
-            $hasZanHumanReadableId = ZanAnnotation::hasPropertyAnnotation(
-                $annotationReader,
-                HumanReadableId::class,
-                $resultSet->getEntityClassName(),
-                $property->name
-            );
-
-            if ($hasDoctrineId || $hasZanHumanReadableId) {
-                $identifiersExpr->add($expr->eq('e.' . $property->name, ':identifier'));
-            }
-        }
-
-        $resultSet->addFilterExpr($identifiersExpr);
-        $resultSet->setDqlParameter('identifier', $identifier);
     }
 
     /**
@@ -407,9 +368,7 @@ class EntityDataController extends AbstractController
 
         $resultSet = new GenericEntityResultSet($entityClassName, $em, $annotationReader);
         $resultSet->setActingUser($user);
-
-        // Apply identifier filter
-        $this->applyIdentifierFilter($resultSet, $identifier, $em, $annotationReader);
+        $resultSet->addIdentifierFilter($identifier);
 
         $entity = $resultSet->mustGetSingleResult();
 
