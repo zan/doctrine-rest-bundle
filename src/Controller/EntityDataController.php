@@ -12,7 +12,7 @@ use Zan\CommonBundle\Util\RequestUtils;
 use Zan\CommonBundle\Util\ZanAnnotation;
 use Zan\CommonBundle\Util\ZanArray;
 use Zan\CommonBundle\Util\ZanDebug;
-use Zan\DoctrineRestBundle\Annotation\HumanReadableId;
+use Zan\DoctrineRestBundle\Annotation\PublicId;
 use Zan\DoctrineRestBundle\EntityMiddleware\EntityMiddlewareRegistry;
 use Zan\DoctrineRestBundle\EntityResultSet\AbstractEntityResultSet;
 use Zan\DoctrineRestBundle\EntityResultSet\GenericEntityResultSet;
@@ -193,7 +193,8 @@ class EntityDataController extends AbstractController
         $resultSet->setActingUser($user);
         $resultSet->addIdentifierFilter($identifier);
 
-        $entity = $resultSet->mustGetSingleResult();
+        $entity = $resultSet->getSingleResult();
+        if (!$entity) throw new \InvalidArgumentException('Could not find entity');
 
         // Apply field editability information, if requested
         if ($includeEditability) {

@@ -10,7 +10,7 @@ use Doctrine\ORM\Query\Expr\Orx;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Zan\CommonBundle\Util\ZanAnnotation;
 use Zan\CommonBundle\Util\ZanObject;
-use Zan\DoctrineRestBundle\Annotation\HumanReadableId;
+use Zan\DoctrineRestBundle\Annotation\PublicId;
 use Zan\DoctrineRestBundle\EntityResultSet\EntityResultSetAvailableParameter;
 use Zan\DoctrineRestBundle\ORM\ZanQueryBuilder;
 use Zan\DoctrineRestBundle\Permissions\PermissionsCalculatorFactory;
@@ -124,6 +124,14 @@ abstract class AbstractEntityResultSet
         return $results[0];
     }
 
+    public function getSingleResult()
+    {
+        $results = $this->getResults();
+        if (!$results) return null;
+
+        return $results[0];
+    }
+
     /**
      * @deprecated this seems to cause several odd issues
      *
@@ -149,7 +157,7 @@ abstract class AbstractEntityResultSet
      *
      * Identifiers are any of the following:
      *  - The doctrine ORM\Id property
-     *  - Any property annotated with Zan\HumanReadableId
+     *  - Any property annotated with Zan\PublicId
      */
     public function addIdentifierFilter($identifier)
     {
@@ -165,14 +173,14 @@ abstract class AbstractEntityResultSet
                 $property->name
             );
 
-            $hasZanHumanReadableId = ZanAnnotation::hasPropertyAnnotation(
+            $hasZanPublicId = ZanAnnotation::hasPropertyAnnotation(
                 $this->annotationReader,
-                HumanReadableId::class,
+                PublicId::class,
                 $this->getEntityClassName(),
                 $property->name
             );
 
-            if ($hasDoctrineId || $hasZanHumanReadableId) {
+            if ($hasDoctrineId || $hasZanPublicId) {
                 $identifiersExpr->add($expr->eq('e.' . $property->name, ':identifier'));
             }
         }
