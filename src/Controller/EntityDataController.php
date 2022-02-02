@@ -244,8 +244,14 @@ class EntityDataController extends AbstractController
         Reader $annotationReader,
         PermissionsCalculatorFactory $permissionsCalculatorFactory
     ) {
+        $params = RequestUtils::getParameters($request);
         $entityClassName = $this->unescapeEntityId($entityId);
         $user = $this->container->has('security.token_storage') ? $this->getUser() : null;
+        $responseFields = [];
+
+        if ($request->query->has('responseFields')) {
+            $responseFields = ZanArray::createFromString($params['responseFields']);
+        }
 
         $permissionsCalculator = $permissionsCalculatorFactory->getPermissionsCalculator($entityClassName);
 
@@ -274,7 +280,7 @@ class EntityDataController extends AbstractController
 
         $retData = [
             'success' => true,
-            'data' => $serializer->serialize($entity),
+            'data' => $serializer->serialize($entity, $responseFields),
         ];
 
         return new JsonResponse($retData);
