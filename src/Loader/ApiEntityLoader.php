@@ -112,9 +112,28 @@ class ApiEntityLoader
             // Multi-value association and $rawValue is an array, eg. OneToMany or ManyToMany
             if ($propertyMetadata->isToManyAssociation() && is_array($rawValue)) {
                 $resolvedEntities = [];
-                foreach ($rawValue as $entityId) {
-                    $resolvedEntities[] = $this->resolveEntity($propertyMetadata->targetEntityClass, $entityId);
+                foreach ($rawValue as $entityIdOrPropertyValues) {
+                    $entityId = null;
+                    // Numeric array, assume this is a flat array of IDs
+                    if (array_key_exists(0, $entityIdOrPropertyValues)) {
+                        $entityId = $entityIdOrPropertyValues;
+                    }
+                    else {
+                        // It might be an existing record where we're getting all the fields
+                        if (array_key_exists('id', $entityIdOrPropertyValues)) {
+                            $entityId = $entityIdOrPropertyValues['id'];
+                        }
+                    }
+                    if ($entityId) {
+                        $resolvedEntities[] = $this->resolveEntity($propertyMetadata->targetEntityClass, $entityId);
+                    }
+                    // If we get to this point with no entity ID then it's probably an array of fields representing a new entity
+                    else {
+                        $newEntity = $this->create($propertyMetadata->targetEntityClass, $entityIdOrPropertyValues);
+                        $resolvedEntities[] = $newEntity;
+                    }
                 }
+
                 return $resolvedEntities;
             }
             // A single entity, eg. ManyToOne or OneToOne
