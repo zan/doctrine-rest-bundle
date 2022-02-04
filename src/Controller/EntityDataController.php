@@ -255,13 +255,52 @@ class EntityDataController extends AbstractController
 
         $permissionsCalculator = $permissionsCalculatorFactory->getPermissionsCalculator($entityClassName);
 
-        $entityLoader = new ApiEntityLoader($em, $user);
-        $entityLoader->setPermissionsCalculator($permissionsCalculator);
-
         $serializer = new MinimalEntitySerializer(
             $em,
             $annotationReader
         );
+
+        $decodedBody = json_decode($request->getContent(), true);
+        $updatedEntities = [];
+
+        // An array posted to this method means a bulk update
+        if (ZanArray::isNotMap($decodedBody)) {
+            foreach ($decodedBody as $rawEntityData) {
+                $updatedEntities[] = $this->updateSingleEntity($entityClassName, $rawEntityData['id'], $rawEntityData, $permissionsCalculator, $em);
+            }
+        }
+        // Updating a single entity (this returns a response with a single entity, see below)
+        else {
+            $updatedEntities[] = $this->updateSingleEntity($entityClassName, $identifier, $decodedBody, $permissionsCalculator, $em);
+        }
+
+        // Commit changes to the database
+        $em->flush();
+
+        $serializedData = null;
+        // Single entity updated
+        if (count($updatedEntities) === 1) {
+            $serializedData = $serializer->serialize($updatedEntities[0], $responseFields);
+        }
+        // Bulk update
+        else {
+            $serializedData = [];
+            foreach ($updatedEntities as $updatedEntity) {
+                $serializedData[] = $serializer->serialize($updatedEntity, $responseFields);
+            }
+        }
+
+        $retData = [
+            'success' => true,
+            'data' => $serializedData,
+        ];
+
+        return new JsonResponse($retData);
+    }
+
+    protected function updateSingleEntity($entityClassName, $identifier, $rawData, $permissionsCalculator, $em)
+    {
+        $user = $this->container->has('security.token_storage') ? $this->getUser() : null;
 
         $entity = $em->find($entityClassName, $identifier);
         if (!$entity) throw new \InvalidArgumentException("No entity found with the specified identifier");
@@ -272,18 +311,12 @@ class EntityDataController extends AbstractController
             throw new \InvalidArgumentException('User does not have permissions to edit entity');
         }
 
-        $decodedBody = json_decode($request->getContent(), true);
-        $entityLoader->load($entity, $decodedBody);
+        $entityLoader = new ApiEntityLoader($em, $user);
+        $entityLoader->setPermissionsCalculator($permissionsCalculator);
 
-        // Commit changes to the database
-        $em->flush();
+        $entityLoader->load($entity, $rawData);
 
-        $retData = [
-            'success' => true,
-            'data' => $serializer->serialize($entity, $responseFields),
-        ];
-
-        return new JsonResponse($retData);
+        return $entity;
     }
 
     /**
