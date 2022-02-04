@@ -252,7 +252,7 @@ abstract class AbstractEntityResultSet
             $qb->setParameter($name, $value);
         }
 
-        $this->applyOrderBys($qb);
+        $this->calculateOrderBy($qb);
 
         //dump($qb->getDQL());
         return $qb;
@@ -263,11 +263,35 @@ abstract class AbstractEntityResultSet
         $calculator->filterQueryBuilder($this->qb, $actingUser);
     }
 
-    protected function applyOrderBys(ZanQueryBuilder $qb)
+    protected function calculateOrderBy(ZanQueryBuilder $qb)
     {
+        $hasManualOrderBy = false;
         foreach ($this->orderBys as $rawOrderBy) {
             // NOTE: property already includes the alias, eg. e.requestedBy
             $qb->addOrderBy($rawOrderBy['property'], $rawOrderBy['direction']);
+            $hasManualOrderBy = true;
+        }
+
+        // Exit now if there was a manual "order by", otherwise see if the entity supports automatic sorting
+        if ($hasManualOrderBy) return;
+
+        $classInterfaces = class_implements($this->entityClassName);
+
+        // Gedmo / STOF Sortable
+        if (in_array('Gedmo\Sortable\Sortable', $classInterfaces)) {
+            $properties = ZanObject::getProperties($this->entityClassName);
+            $sortableProperty = null;
+            foreach ($properties as $property) {
+                if (ZanAnnotation::hasPropertyAnnotation($this->annotationReader, 'Gedmo\Mapping\Annotation\SortablePosition', $this->entityClassName, $property->getName())) {
+                    $sortableProperty = $property->getName();
+                    break;
+                }
+            }
+
+            // Found the sortable property, add it to the "order by"
+            if ($sortableProperty) {
+                $qb->addOrderBy($qb->getRootAlias() . '.' . $sortableProperty);
+            }
         }
     }
 
