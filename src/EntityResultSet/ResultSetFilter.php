@@ -48,8 +48,14 @@ class ResultSetFilter
         $parameterName = $qb->generateUniqueParameterName($fieldName);
 
         if ('=' === $this->operator) {
-            $qb->andWhere("$fieldName = :$parameterName");
-            $qb->setParameter($parameterName, $this->value);
+            // Special case for null
+            if (null === $this->value) {
+                $qb->andWhere("$fieldName IS NULL");
+            }
+            else {
+                $qb->andWhere("$fieldName = :$parameterName");
+                $qb->setParameter($parameterName, $this->value);
+            }
         }
         if ('in' === $this->operator) {
             $qb->andWhere("$fieldName in (:$parameterName)");
