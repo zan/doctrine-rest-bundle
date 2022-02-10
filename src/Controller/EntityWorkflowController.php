@@ -64,7 +64,12 @@ class EntityWorkflowController extends AbstractController
         Reader $annotationReader,
     ) {
         $entityClassName = DoctrineRestUtils::unescapeEntityId($entityId);
-        $newPlace = $request->request->get('newPlace');
+        $transition = $request->request->get('transition');
+        $decodedBody = json_decode($request->getContent(), true);
+
+        if ($decodedBody && array_key_exists('transition', $decodedBody)) {
+            $transition = $decodedBody['transition'];
+        }
 
         $resultSet = new GenericEntityResultSet($entityClassName, $em, $annotationReader);
         $resultSet->setActingUser($this->getUser());
@@ -77,7 +82,7 @@ class EntityWorkflowController extends AbstractController
 
         $workflow = $workflowRegistry->get($entity);
 
-        $workflow->apply($entity, $newPlace);
+        $workflow->apply($entity, $transition);
 
         $em->flush();
 
