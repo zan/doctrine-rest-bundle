@@ -51,10 +51,12 @@ class WorkflowResponse
             // Do not include transitions that are not valid state transitions
             if (!$this->canTransitionViaGraph($transition, $this->entity)) continue;
 
+            $transitionMetadata = $this->workflow->getMetadataStore()->getTransitionMetadata($transition);
             $blockers = $this->workflow->buildTransitionBlockerList($this->entity, $transition->getName());
 
             $serialized = [
                 'name' => $transition->getName(),
+                'label' => $transitionMetadata['label'] ?? $transition->getName(),
                 'froms' => $transition->getFroms(),
                 'tos' => $transition->getTos(),
             ];
