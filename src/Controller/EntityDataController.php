@@ -19,6 +19,7 @@ use Zan\DoctrineRestBundle\EntityResultSet\GenericEntityResultSet;
 use Zan\DoctrineRestBundle\EntityResultSet\ResultSetFilter;
 use Zan\DoctrineRestBundle\EntityResultSet\ResultSetFilterCollection;
 use Zan\DoctrineRestBundle\EntitySerializer\MinimalEntitySerializer;
+use Zan\DoctrineRestBundle\Exception\ApiException;
 use Zan\DoctrineRestBundle\Loader\ApiEntityLoader;
 use Zan\DoctrineRestBundle\Permissions\EntityPropertyEditabilityMap;
 use Zan\DoctrineRestBundle\Permissions\PermissionsCalculatorFactory;
@@ -60,8 +61,7 @@ class EntityDataController extends AbstractController
         $entityClassName = $this->unescapeEntityId($entityId);
         $permissionsCalculator = $permissionsCalculatorFactory->getPermissionsCalculator($entityClassName);
         if (!$permissionsCalculator) {
-            // todo: more informative error message
-            throw new \InvalidArgumentException('This entity is not available for API access');
+            throw new ApiException('This entity is not available for API access', 'Zan.Drest.NoPermissionsOnEntity');
         }
 
         if ($request->query->has('includeMetadata')) {

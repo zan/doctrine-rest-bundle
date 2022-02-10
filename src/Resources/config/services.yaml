@@ -16,6 +16,10 @@ services:
       - !tagged_iterator zan.drest.entity_middleware
       - '@annotation_reader'
 
+  Zan\DoctrineRestBundle\Listener\ApiExceptionListener:
+    tags:
+      - { name: kernel.event_listener, event: kernel.exception, method: onKernelException }
+
   #
   # Public services
   Zan\DoctrineRestBundle\EntityResultSet\EntityResultSetFactory:
