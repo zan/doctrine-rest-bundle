@@ -13,6 +13,7 @@ use Zan\CommonBundle\Util\ZanAnnotation;
 use Zan\CommonBundle\Util\ZanArray;
 use Zan\CommonBundle\Util\ZanDebug;
 use Zan\DoctrineRestBundle\Annotation\PublicId;
+use Zan\DoctrineRestBundle\EntityMiddleware\EntityApiMiddlewareEvent;
 use Zan\DoctrineRestBundle\EntityMiddleware\EntityMiddlewareRegistry;
 use Zan\DoctrineRestBundle\EntityResultSet\AbstractEntityResultSet;
 use Zan\DoctrineRestBundle\EntityResultSet\GenericEntityResultSet;
@@ -375,14 +376,24 @@ class EntityDataController extends AbstractController
         $decodedBody = json_decode($request->getContent(), true);
         $newEntity = $entityLoader->create($entityClassName, $decodedBody);
 
+        $middlewareArguments = new EntityApiMiddlewareEvent($user, $decodedBody, $newEntity);
+
         // beforeCreate middleware
         foreach ($middlewares as $middleware) {
-            $middleware->beforeCreate($newEntity);
+            $middleware->beforeCreate($middlewareArguments);
         }
 
         // Commit changes to the database
         $em->persist($newEntity);
         $em->flush();
+
+        // afterCreate middleware
+        foreach ($middlewares as $middleware) {
+            $middleware->afterCreate($middlewareArguments);
+        }
+
+        // Flush again to pick up changes in middleware
+        if (count($middlewares) > 0) $em->flush();
 
         $retData = [
             'success' => true,
