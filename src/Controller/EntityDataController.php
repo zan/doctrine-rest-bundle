@@ -56,7 +56,7 @@ class EntityDataController extends AbstractController
         $includeMetadata = [];
         // Collection of filters to apply to the result set
         $filterCollection = new ResultSetFilterCollection();
-        $user = $this->container->has('security.token_storage') ? $this->getUser() : null;
+        $user = $this->getUser();
 
         $entityClassName = $this->unescapeEntityId($entityId);
         $permissionsCalculator = $permissionsCalculatorFactory->getPermissionsCalculator($entityClassName);
@@ -148,7 +148,7 @@ class EntityDataController extends AbstractController
     ) {
         $params = RequestUtils::getParameters($request);
         $entityClassName = $this->unescapeEntityId($entityId);
-        $user = $this->container->has('security.token_storage') ? $this->getUser() : null;
+        $user = $this->getUser();
         $permissionsCalculator = $permissionsCalculatorFactory->getPermissionsCalculator($entityClassName);
 
         $responseFields = [];
@@ -246,7 +246,6 @@ class EntityDataController extends AbstractController
     ) {
         $params = RequestUtils::getParameters($request);
         $entityClassName = $this->unescapeEntityId($entityId);
-        $user = $this->container->has('security.token_storage') ? $this->getUser() : null;
         $responseFields = [];
 
         if ($request->query->has('responseFields')) {
@@ -300,7 +299,7 @@ class EntityDataController extends AbstractController
 
     protected function updateSingleEntity($entityClassName, $identifier, $rawData, $permissionsCalculator, $em)
     {
-        $user = $this->container->has('security.token_storage') ? $this->getUser() : null;
+        $user = $this->getUser();
 
         $entity = $em->find($entityClassName, $identifier);
         if (!$entity) throw new \InvalidArgumentException("No entity found with the specified identifier");
@@ -332,7 +331,7 @@ class EntityDataController extends AbstractController
     ) {
         $params = RequestUtils::getParameters($request);
         $entityClassName = $this->unescapeEntityId($entityId);
-        $user = $this->container->has('security.token_storage') ? $this->getUser() : null;
+        $user = $this->getUser();
         $middlewares = $middlewareRegistry->getMiddlewaresForEntity($entityClassName);
 
         $responseFields = [];
@@ -395,7 +394,7 @@ class EntityDataController extends AbstractController
         PermissionsCalculatorFactory $permissionsCalculatorFactory
     ) {
         $entityClassName = $this->unescapeEntityId($entityId);
-        $user = $this->container->has('security.token_storage') ? $this->getUser() : null;
+        $user = $this->getUser();
 
         $permissionsCalculator = $permissionsCalculatorFactory->getPermissionsCalculator($entityClassName);
 
