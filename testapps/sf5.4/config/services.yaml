@@ -25,5 +25,10 @@ services:
     App\Repository\:
         resource: '../src/Repository'
         tags: ['doctrine.repository_service']
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
+
+    # Zan doctrine REST API middleware
+    App\EntityApiMiddleware\:
+        resource: '../src/EntityApiMiddleware'
+        tags: [ 'zan.drest.entity_middleware' ]
+
+

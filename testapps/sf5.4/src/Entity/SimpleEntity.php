@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Zan\DoctrineRestBundle\Annotation\ApiEnabled;
+use Zan\DoctrineRestBundle\Annotation\ApiMiddleware;
 use Zan\DoctrineRestBundle\Annotation\ApiPermissions;
 use Zan\DoctrineRestBundle\Annotation\PublicId;
 
@@ -14,6 +15,7 @@ use Zan\DoctrineRestBundle\Annotation\PublicId;
  * @ORM\Table(name="test_simpleEntities")
  *
  * @ApiPermissions(read="*", write="*")
+ * @ApiMiddleware("App\EntityApiMiddleware\SimpleEntityMiddleware")
  */
 class SimpleEntity
 {
@@ -24,23 +26,32 @@ class SimpleEntity
      *
      * @ApiEnabled
      */
-    private ?int $id;
+    private ?int $id = null;
 
     /**
      * Human-readable unique ID
      *
-     * @ORM\Column(name="publicId", type="string", length=255, nullable=false)
+     * @ORM\Column(name="publicId", type="string", length=255, nullable=true)
      *
      * @PublicId
      * @ApiEnabled
      */
-    protected ?string $publicId;
+    protected ?string $publicId = null;
 
     /**
      * @ORM\Column(name="label", type="string", length=255, nullable=true)
      * @ApiEnabled
      */
     private ?string $label = null;
+
+    /**
+     * Used for testing entity middleware features
+     *
+     * @ORM\Column(name="middlewareValue", type="string", length=255, nullable=true)
+     *
+     * @ApiEnabled
+     */
+    private ?string $middlewareValue = null;
 
     public function getId(): ?int
     {
@@ -70,5 +81,15 @@ class SimpleEntity
     public function setPublicId(?string $publicId): void
     {
         $this->publicId = $publicId;
+    }
+
+    public function getMiddlewareValue(): ?string
+    {
+        return $this->middlewareValue;
+    }
+
+    public function setMiddlewareValue(?string $middlewareValue): void
+    {
+        $this->middlewareValue = $middlewareValue;
     }
 }
