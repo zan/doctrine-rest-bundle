@@ -1,8 +1,14 @@
 {
     "type": "project",
     "license": "proprietary",
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true,
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "../../"
+        }
+    ],
     "require": {
         "php": ">=7.2.5",
         "ext-ctype": "*",
@@ -17,8 +23,10 @@
         "symfony/framework-bundle": "5.4.*",
         "symfony/proxy-manager-bridge": "5.4.*",
         "symfony/runtime": "5.4.*",
+        "symfony/security-bundle": "5.4.*",
         "symfony/yaml": "5.4.*",
-        "zan/common-bundle": "dev-main"
+        "zan/common-bundle": "dev-main",
+        "zan/doctrine-rest-bundle": "dev-main"
     },
     "require-dev": {
         "doctrine/doctrine-fixtures-bundle": "^3.4",
