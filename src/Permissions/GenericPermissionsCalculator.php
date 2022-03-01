@@ -42,6 +42,11 @@ class GenericPermissionsCalculator implements PermissionsCalculatorInterface
 
     protected function anyAbilityMatchesAnySpecification($abilities, $specifications)
     {
+        // First, check if the specifications allow anyone to read the entity
+        foreach ($specifications as $specification) {
+            if ('*' === $specification) return true;
+        }
+
         foreach ($abilities as $ability) {
             foreach ($specifications as $specification) {
                 if ($this->abilityMatchesSpecification($ability, $specification)) return true;
