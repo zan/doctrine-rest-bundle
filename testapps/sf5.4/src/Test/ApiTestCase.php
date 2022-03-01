@@ -24,9 +24,9 @@ class ApiTestCase extends WebTestCase
         return $client;
     }
 
-    protected function request(KernelBrowser $client, string $method, string $uri)
+    protected function request(KernelBrowser $client, string $method, string $uri, array $params = [])
     {
-        $client->jsonRequest($method, $uri);
+        $client->jsonRequest($method, $uri, $params);
 
         $response = $client->getResponse();
 
