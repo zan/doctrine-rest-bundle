@@ -262,15 +262,15 @@ class EntityDataController extends AbstractController
         $decodedBody = json_decode($request->getContent(), true);
         $updatedEntities = [];
 
-        // An array posted to this method means a bulk update
+        // An array of records means a bulk update
         if (ZanArray::isNotMap($decodedBody)) {
             foreach ($decodedBody as $rawEntityData) {
-                $updatedEntities[] = $this->updateSingleEntity($entityClassName, $rawEntityData['id'], $rawEntityData, $permissionsCalculator, $em);
+                $updatedEntities[] = $this->updateSingleEntity($entityClassName, $rawEntityData['id'], $rawEntityData, $permissionsCalculator, $em, $annotationReader);
             }
         }
         // Updating a single entity (this returns a response with a single entity, see below)
         else {
-            $updatedEntities[] = $this->updateSingleEntity($entityClassName, $identifier, $decodedBody, $permissionsCalculator, $em);
+            $updatedEntities[] = $this->updateSingleEntity($entityClassName, $identifier, $decodedBody, $permissionsCalculator, $em, $annotationReader);
         }
 
         // Commit changes to the database
@@ -297,11 +297,21 @@ class EntityDataController extends AbstractController
         return new JsonResponse($retData);
     }
 
-    protected function updateSingleEntity($entityClassName, $identifier, $rawData, $permissionsCalculator, $em)
-    {
+    protected function updateSingleEntity(
+        $entityClassName,
+        $identifier,
+        $rawData,
+        $permissionsCalculator,
+        $em,
+        $annotationReader
+    ) {
         $user = $this->getUser();
 
-        $entity = $em->find($entityClassName, $identifier);
+        $resultSet = new GenericEntityResultSet($entityClassName, $em, $annotationReader);
+        $resultSet->setActingUser($user);
+        $resultSet->addIdentifierFilter($identifier);
+
+        $entity = $resultSet->getSingleResult();
         if (!$entity) throw new \InvalidArgumentException("No entity found with the specified identifier");
 
         // Deny access unless there's a calculator that specifically permits access
