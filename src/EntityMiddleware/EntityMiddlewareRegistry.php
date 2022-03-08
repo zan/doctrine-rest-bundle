@@ -41,9 +41,16 @@ class EntityMiddlewareRegistry
 
         if (!is_string($entity)) $entity = get_class($entity);
 
-        $classAnnotations = $this->annotationReader->getClassAnnotations(new \ReflectionClass($entity));
-
+        $reflClass = new \ReflectionClass($entity);
         $middlewareNamespaces = [];
+
+        $attributes = $reflClass->getAttributes(ApiMiddleware::class);
+        if ($attributes) {
+            $middlewareNamespaces = $attributes[0]->newInstance()->getMiddlewares();
+        }
+
+        $classAnnotations = $this->annotationReader->getClassAnnotations($reflClass);
+
         foreach ($classAnnotations as $annotation) {
             if (!$annotation instanceof ApiMiddleware) continue;
 

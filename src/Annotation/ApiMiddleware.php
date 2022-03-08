@@ -10,14 +10,19 @@ use Doctrine\ORM\Mapping\Annotation;
  * @Annotation
  * @Target({"CLASS"})
  */
+#[\Attribute]
 class ApiMiddleware implements Annotation
 {
     /** @var string[] */
     private $middlewares;
 
-    public function __construct(array $args)
+    /**
+     * @param string[]|string $args
+     */
+    public function __construct($args)
     {
-        $values = $args['value'];
+        // "value" will come from a doctrine-style annotation, otherwise use attribute-style value
+        $values = $args['value'] ?? $args;
 
         if (!is_array($values)) $values = [ $values ];
 
