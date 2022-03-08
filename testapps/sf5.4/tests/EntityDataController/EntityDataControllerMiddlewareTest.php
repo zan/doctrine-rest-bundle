@@ -18,7 +18,7 @@ class EntityDataControllerMiddlewareTest extends ApiTestCase
         $response = $this->request($client, 'POST', '/api/zan/drest/entity/App.Entity.SimpleEntity', $params);
 
         // SimpleEntityMiddleware will set the middlewareValue property
-        $this->assertEquals($label . ' before create middleware', $response['data']['middlewareValue']);
+        $this->assertStringContainsString('BEFORE_CREATE', $response['data']['middlewareValue']);
     }
 
     public function testAfterCreate()
@@ -33,6 +33,6 @@ class EntityDataControllerMiddlewareTest extends ApiTestCase
         $response = $this->request($client, 'POST', '/api/zan/drest/entity/App.Entity.SimpleEntity', $params);
 
         // SimpleEntityMiddleware will set the middlewareValue property
-        $this->assertEquals($label . ' after create middleware', $response['data']['middlewareValue']);
+        $this->assertStringContainsString('AFTER_CREATE', $response['data']['middlewareValue']);
     }
 }

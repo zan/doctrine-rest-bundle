@@ -13,7 +13,8 @@ class SimpleEntityMiddleware extends BaseEntityApiMiddleware
         /** @var SimpleEntity $entity */
         $entity = $middlewareEvent->getEntity();
 
-        $entity->setMiddlewareValue($entity->getLabel() . ' before create middleware');
+        // Append string indicating the entity was processed
+        $entity->setMiddlewareValue($entity->getMiddlewareValue() . 'BEFORE_CREATE ');
     }
 
     public function afterCreate(EntityApiMiddlewareEvent $middlewareEvent)
@@ -21,6 +22,7 @@ class SimpleEntityMiddleware extends BaseEntityApiMiddleware
         /** @var SimpleEntity $entity */
         $entity = $middlewareEvent->getEntity();
 
-        $entity->setMiddlewareValue($entity->getLabel() . ' after create middleware');
+        // Append string indicating the entity was processed
+        $entity->setMiddlewareValue($entity->getMiddlewareValue() . 'AFTER_CREATE ');
     }
 }
