@@ -14,6 +14,7 @@ use Doctrine\ORM\Mapping\Annotation;
  * @Annotation
  * @Target({"PROPERTY", "METHOD"})
  */
+#[\Attribute]
 class ApiEnabled implements Annotation
 {
 

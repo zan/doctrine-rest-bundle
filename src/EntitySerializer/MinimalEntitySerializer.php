@@ -6,6 +6,7 @@ namespace Zan\DoctrineRestBundle\EntitySerializer;
 
 use Zan\CommonBundle\Util\ZanObject;
 use Zan\CommonBundle\Util\ZanString;
+use Zan\DoctrineRestBundle\Annotation\ApiEnabled;
 use Zan\DoctrineRestBundle\EntitySerializer\FieldMap;
 use Doctrine\Common\Annotations\Reader;
 use Doctrine\ORM\EntityManager;
@@ -211,6 +212,9 @@ class MinimalEntitySerializer
         }
 
         $metadata = $this->em->getClassMetadata(get_class($entity));
+
+        $attributes = $metadata->reflFields[$property]->getAttributes(ApiEnabled::class);
+        if ($attributes && $attributes[0]->getName() === ApiEnabled::class) return true;
 
         $annotations = $this->annotationReader->getPropertyAnnotations($metadata->reflFields[$property]);
 
