@@ -22,7 +22,7 @@ class ZanQueryBuilder extends QueryBuilder
      * Resolves a dot-separated property path into a series of joins and returns the join alias to use when comparing
      * against the field
      *
-     * For example, "defaultGroup.label" would result in a join of the "defaultGroup" relationshipo and would then
+     * For example, "defaultGroup.label" would result in a join of the "defaultGroup" relationship and would then
      * return an alias like "DefaultGroup.label" that could be used to compare against the label value
      */
     public function resolveProperty($propertyPath): ResolvedProperty
@@ -31,12 +31,10 @@ class ZanQueryBuilder extends QueryBuilder
 
         // Early exit if there are no dots in the property path since that means it's directly on the entity being queried
         if (count($pathQueue) === 1) {
-            //return new ResolvedProperty('e.' . $propertyPath);
+            return new ResolvedProperty($this->getRootAlias() . '.' . $propertyPath);
         }
 
         $rootEntity = $this->getRootEntityNamespace();
-        //$field = array_pop($pathQueue);
-        $field = $pathQueue[count($pathQueue)-1];
         $currEntity = $rootEntity;
         // Start with the entity alias
         $joinTableName = $this->getRootAlias();
@@ -44,22 +42,37 @@ class ZanQueryBuilder extends QueryBuilder
         $resolvedProperty = new ResolvedProperty();
         while (count($pathQueue) > 0) {
             $currProperty = $pathQueue[0];
-            $joinAlias = $this->buildJoinAlias($currEntity, $currProperty, $resolvedProperty);
+            $classMetadata = $this->getEntityManager()->getClassMetadata($currEntity);
 
-            $this->leftJoin($joinTableName . '.' . $currProperty, $joinAlias);
+            // Check if it's an association
+            if ($classMetadata->hasAssociation($currProperty)) {
+                $association = $classMetadata->getAssociationMapping($currProperty);
+                // Associations need to be joined
+                $joinAlias = $this->buildJoinAlias($currEntity, $currProperty, $resolvedProperty);
+                $this->leftJoin($joinTableName . '.' . $currProperty, $joinAlias);
+                // Update $currEntity so that it refers to the entity that was just joined
+                $currEntity = $association['targetEntity'];
+                // Next join table will be the alias we just created
+                $joinTableName = $joinAlias;
+            }
+            // It's a field on the entity
+            else {
+                $field = $classMetadata->getFieldMapping($currProperty);
+                if ($field) {
+                    // The field is the final node in the tree, so the most recent joinAlias can be used to query on it
+                    $resolvedProperty->setQueryAlias($joinAlias . '.' . $field['fieldName']);
+
+                    return $resolvedProperty;
+                }
+                else {
+                    throw new \ErrorException("Invalid field: could not find $currProperty on $currEntity");
+                }
+            }
 
             array_shift($pathQueue);
-            // Update the join table for the next part of the path
-            $joinTableName = $joinAlias;
         }
 
-        // The most recent joinAlias and property can be used to query on the property in DQL
-        //$resolvedProperty->setQueryAlias($joinAlias . '.' . $field);
-        $resolvedProperty->setQueryAlias($joinAlias);
-//        dump("Join alias: " . $joinAlias);
-//        $resolvedProperty->setQueryAlias($joinAlias);
-
-        return $resolvedProperty;
+        throw new \ErrorException('Reached the end of the property specification without finding a field');
     }
 
     protected function buildJoinAlias(string $entityNamespace, string $property, ResolvedProperty $resolvedProperty = null): string
