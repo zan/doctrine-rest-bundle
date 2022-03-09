@@ -14,9 +14,8 @@ use Zan\DoctrineRestBundle\Annotation\PublicId;
  *
  * @ORM\Entity
  * @ORM\Table(name="test_simpleEntities")
- *
- * ApiPermissions(read="*", write="*")
  */
+#[ApiPermissions(read: "*", write: "*")]
 #[ApiMiddleware(SimpleEntityMiddleware::class)]
 class SimpleEntity
 {
