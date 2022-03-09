@@ -25,7 +25,7 @@ class SimpleEntityFixtures extends Fixture
     public function getData(): array
     {
         return [
-            [ 'publicId' => 'simple1', 'label' => 'middleware1', ],
+            [ 'publicId' => 'simple1', 'label' => 'simple entity one', ],
         ];
     }
 }

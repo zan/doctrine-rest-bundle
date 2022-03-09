@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\EntityApiMiddleware\SimpleEntityMiddleware;
 use Doctrine\ORM\Mapping as ORM;
 use Zan\DoctrineRestBundle\Annotation\ApiEnabled;
 use Zan\DoctrineRestBundle\Annotation\ApiMiddleware;
@@ -14,9 +15,9 @@ use Zan\DoctrineRestBundle\Annotation\PublicId;
  * @ORM\Entity
  * @ORM\Table(name="test_simpleEntities")
  *
- * @ApiPermissions(read="*", write="*")
- * @ApiMiddleware("App\EntityApiMiddleware\SimpleEntityMiddleware")
+ * ApiPermissions(read="*", write="*")
  */
+#[ApiMiddleware(SimpleEntityMiddleware::class)]
 class SimpleEntity
 {
     /**

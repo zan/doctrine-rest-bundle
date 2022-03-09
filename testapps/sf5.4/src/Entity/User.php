@@ -30,9 +30,8 @@ class User implements UserInterface, ActorWithAbilitiesInterface
 
     /**
      * @ORM\Column(type="string", length=180, unique=true)
-     *
-     * @ApiEnabled
      */
+    #[ApiEnabled]
     private $username;
 
     /**

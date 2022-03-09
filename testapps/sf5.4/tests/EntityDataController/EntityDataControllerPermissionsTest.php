@@ -27,7 +27,6 @@ class EntityDataControllerPermissionsTest extends ApiTestCase
     {
         $client = $this->loginAs('test1');
 
-        $this->expectException(\ErrorException::class);
         $response = $this->request($client, 'GET', '/api/zan/drest/entity/App.Entity.SimpleEntity/simple1');
         $raw = $response['data'];
 
