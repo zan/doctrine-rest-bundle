@@ -14,6 +14,7 @@ use Doctrine\ORM\Mapping\Annotation;
  * @Annotation
  * @Target({"PROPERTY"})
  */
+#[\Attribute(\Attribute::TARGET_PROPERTY)]
 class PublicId implements Annotation
 {
 

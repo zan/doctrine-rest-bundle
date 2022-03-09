@@ -173,12 +173,21 @@ abstract class AbstractEntityResultSet
                 $property->name
             );
 
-            $hasZanPublicId = ZanAnnotation::hasPropertyAnnotation(
-                $this->annotationReader,
-                PublicId::class,
-                $this->getEntityClassName(),
-                $property->name
-            );
+            $hasZanPublicId = false;
+            $zanPublicIdAttrs = $property->getAttributes(PublicId::class);
+            if ($zanPublicIdAttrs) {
+                $hasZanPublicId = true;
+            }
+
+            // Fall back to annotations
+            if (!$hasZanPublicId) {
+                $hasZanPublicId = ZanAnnotation::hasPropertyAnnotation(
+                    $this->annotationReader,
+                    PublicId::class,
+                    $this->getEntityClassName(),
+                    $property->name
+                );
+            }
 
             if ($hasDoctrineId || $hasZanPublicId) {
                 $identifiersExpr->add($expr->eq('e.' . $property->name, ':identifier'));
