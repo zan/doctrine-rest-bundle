@@ -34,12 +34,4 @@ class EntityDataControllerBasicTest extends ApiTestCase
 
         $this->assertEquals($response['data']['label'], 'label changed');
     }
-
-    public function testNoAccessByDefault()
-    {
-        $client = $this->loginAs('test1');
-
-        $this->expectException(\ErrorException::class);
-        $this->request($client, 'GET', '/api/zan/drest/entity/App.Entity.NoApiAccess');
-    }
 }
