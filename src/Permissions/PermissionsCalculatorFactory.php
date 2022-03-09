@@ -30,25 +30,37 @@ class PermissionsCalculatorFactory
 
     public function getPermissionsCalculator($entityClassName): ?PermissionsCalculatorInterface
     {
-        /** @var ApiPermissions $apiPermissionsAnnotation */
-        $apiPermissionsAnnotation = ZanAnnotation::getClassAnnotation(
-            $this->annotationReader,
-            ApiPermissions::class,
-            $entityClassName
-        );
-        if (!$apiPermissionsAnnotation) return null;
+        /** @var ApiPermissions $apiPermissionsDeclaration */
+        $apiPermissionsDeclaration = null;
+
+        // Check for an attribute on the entity
+        $reflClass = new \ReflectionClass($entityClassName);
+        $attributes = $reflClass->getAttributes(ApiPermissions::class);
+        if ($attributes) {
+            $apiPermissionsDeclaration = $attributes[0]->newInstance();
+        }
+
+        // Try annotations next
+        if (!$apiPermissionsDeclaration) {
+            $apiPermissionsDeclaration = ZanAnnotation::getClassAnnotation(
+                $this->annotationReader,
+                ApiPermissions::class,
+                $entityClassName
+            );
+            if (!$apiPermissionsDeclaration) return null;
+        }
+
 
         // If there's a permissions class, return it
         // todo: this should work with services
-        if ($apiPermissionsAnnotation->getPermissionsClass()) {
-            $classNamespace = $apiPermissionsAnnotation->getPermissionsClass();
-            return new $classNamespace;
+        if ($apiPermissionsDeclaration->getPermissionsClass()) {
+            return new $apiPermissionsDeclaration->getPermissionsClass();
         }
 
         // Otherwise, build a generic calculator based off information in the annotations
         $calculator = new GenericPermissionsCalculator();
-        $calculator->setReadAbilities($apiPermissionsAnnotation->getReadAbilities());
-        $calculator->setWriteAbilities($apiPermissionsAnnotation->getWriteAbilities());
+        $calculator->setReadAbilities($apiPermissionsDeclaration->getReadAbilities());
+        $calculator->setWriteAbilities($apiPermissionsDeclaration->getWriteAbilities());
 
         return $calculator;
     }

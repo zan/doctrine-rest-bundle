@@ -4,6 +4,7 @@
 namespace Zan\DoctrineRestBundle\Annotation;
 
 
+use Doctrine\Common\Annotations\Annotation\NamedArgumentConstructor;
 use Doctrine\ORM\Mapping\Annotation;
 
 /**
@@ -16,6 +17,7 @@ use Doctrine\ORM\Mapping\Annotation;
  * @NamedArgumentConstructor
  * @Target({"CLASS"})
  */
+#[\Attribute]
 class ApiPermissions implements Annotation
 {
     private $readSpecification = null;
