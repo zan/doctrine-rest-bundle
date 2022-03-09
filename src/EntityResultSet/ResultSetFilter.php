@@ -36,7 +36,7 @@ class ResultSetFilter
     public function applyToQueryBuilder(ZanQueryBuilder $qb)
     {
         $fieldName = null;
-        // A dot in the property means this is a nested assocation that needs to be resolved
+        // A dot in the property means this is a nested association that needs to be resolved
         if (str_contains($this->property, '.')) {
             $fieldName = $qb->resolveProperty($this->property)->getQueryAlias();
         }
