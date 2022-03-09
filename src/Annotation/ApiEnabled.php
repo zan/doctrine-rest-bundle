@@ -13,6 +13,8 @@ use Doctrine\ORM\Mapping\Annotation;
  *
  * @Annotation
  * @Target({"PROPERTY", "METHOD"})
+ *
+ * todo: these should move to an "Attribute" namespace
  */
 #[\Attribute]
 class ApiEnabled implements Annotation
