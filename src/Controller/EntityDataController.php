@@ -152,6 +152,10 @@ class EntityDataController extends AbstractController
         $user = $this->getUser();
         $permissionsCalculator = $permissionsCalculatorFactory->getPermissionsCalculator($entityClassName);
 
+        if (!$permissionsCalculator) {
+            throw new ApiException('This entity is not available for API access', 'Zan.Drest.NoPermissionsOnEntity');
+        }
+
         $responseFields = [];
         $includeMetadata = [];  // which types of metadata to include in the response
         $metadata = [];         // metadata serialized to the response
