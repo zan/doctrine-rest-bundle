@@ -33,6 +33,14 @@ class Group
      */
     protected $groupUserMappings;
 
+    /**
+     * The user who manages this group
+     *
+     * @ORM\ManyToOne(targetEntity="User")
+     * @ORM\JoinColumn(name="managerId", referencedColumnName="id")
+     */
+    private ?User $manager;
+
     public function __construct(string $label)
     {
         $this->label = $label;
@@ -48,5 +56,15 @@ class Group
     public function setLabel(string $label): void
     {
         $this->label = $label;
+    }
+
+    public function getManager(): ?User
+    {
+        return $this->manager;
+    }
+
+    public function setManager(?User $manager): void
+    {
+        $this->manager = $manager;
     }
 }

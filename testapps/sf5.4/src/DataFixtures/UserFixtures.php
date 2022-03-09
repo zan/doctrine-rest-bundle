@@ -27,14 +27,11 @@ class UserFixtures extends Fixture
     public function getData(): array
     {
         return [
-            [
-                'username' => 'test1',
-                'displayName' => 'First Testuser',
-            ],
-            [
-                'username' => 'test2',
-                'displayName' => 'Second Testuser',
-            ],
+            // Manages the test group
+            [ 'username' => 'testManager', 'displayName' => 'Manager User' ],
+
+            [ 'username' => 'test1', 'displayName' => 'First Testuser' ],
+            [ 'username' => 'test2', 'displayName' => 'Second Testuser' ],
 
             [
                 'username' => 'hasFailedLogins',

@@ -4,7 +4,6 @@ namespace App\DataFixtures;
 
 use App\Entity\Group;
 use Doctrine\Bundle\FixturesBundle\Fixture;
-use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 
 class GroupFixtures extends Fixture
@@ -24,9 +23,7 @@ class GroupFixtures extends Fixture
     public function getData(): array
     {
         return [
-            [
-                'label' => 'Test Group',
-            ],
+            [ 'label' => 'Test Group' ],
         ];
     }
 }
