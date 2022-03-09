@@ -32,10 +32,9 @@ class SimpleEntity
      * Human-readable unique ID
      *
      * @ORM\Column(name="publicId", type="string", length=255, nullable=true)
-     *
-     * @PublicId
-     * @ApiEnabled
      */
+    #[ApiEnabled]
+    #[PublicId]
     protected ?string $publicId = null;
 
     /**

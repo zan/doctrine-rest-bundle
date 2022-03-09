@@ -31,6 +31,5 @@ class EntityDataControllerPermissionsTest extends ApiTestCase
         $raw = $response['data'];
 
         $this->assertEquals('simple1', $raw['publicId']);
-        dump($raw);
     }
 }
