@@ -13,9 +13,7 @@ class ResultSetFilterCollection
     {
         $fc = new ResultSetFilterCollection();
 
-        foreach ($raw as $rawFilter) {
-            $fc->items->add(ResultSetFilter::buildFromArray($rawFilter));
-        }
+        $fc->addAndFiltersFromArray($raw);
 
         return $fc;
     }
@@ -23,6 +21,13 @@ class ResultSetFilterCollection
     public function __construct()
     {
         $this->items = new ArrayCollection();
+    }
+
+    public function addAndFiltersFromArray(array $raw)
+    {
+        foreach ($raw as $rawFilter) {
+            $this->items->add(ResultSetFilter::buildFromArray($raw));
+        }
     }
     
     public function applyToQueryBuilder(QueryBuilder $qb)
