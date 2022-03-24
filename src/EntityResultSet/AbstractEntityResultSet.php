@@ -173,6 +173,9 @@ abstract class AbstractEntityResultSet
                 $property->name
             );
 
+            $hasDoctrineIdAttribute = $property->getAttributes(Id::class);
+            if ($hasDoctrineIdAttribute) $hasDoctrineId = true;
+
             $hasZanPublicId = false;
             $zanPublicIdAttrs = $property->getAttributes(PublicId::class);
             if ($zanPublicIdAttrs) {
