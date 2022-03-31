@@ -6,6 +6,7 @@ namespace Zan\DoctrineRestBundle\Permissions;
 
 use Doctrine\Common\Annotations\Reader;
 use Doctrine\ORM\EntityManagerInterface;
+use Zan\DoctrineRestBundle\Annotation\ApiEnabled;
 
 /**
  * todo: permissions calculator should be a service
@@ -104,6 +105,10 @@ class EntityPropertyEditabilityMap
         }
 
         $metadata = $this->em->getClassMetadata(get_class($entity));
+
+        // ApiEnabled attribute
+        $attributes = $metadata->reflFields[$property]->getAttributes(ApiEnabled::class);
+        if ($attributes && $attributes[0]->getName() === ApiEnabled::class) return true;
 
         $annotations = $this->annotationReader->getPropertyAnnotations($metadata->reflFields[$property]);
 
