@@ -54,7 +54,7 @@ class PermissionsCalculatorFactory
         // If there's a permissions class, return it
         // todo: this should work with services
         if ($apiPermissionsDeclaration->getPermissionsClass()) {
-            return new $apiPermissionsDeclaration->getPermissionsClass();
+            return new ($apiPermissionsDeclaration->getPermissionsClass());
         }
 
         // Otherwise, build a generic calculator based off information in the annotations
