@@ -12,11 +12,11 @@ use Zan\DoctrineRestBundle\ORM\ZanQueryBuilder;
  */
 interface PermissionsCalculatorInterface
 {
-    public function filterQueryBuilder(ZanQueryBuilder $qb, ActorWithAbilitiesInterface $actingUser);
+    public function filterQueryBuilder(ZanQueryBuilder $qb, ActorWithAbilitiesInterface $actingUser): void;
 
-    public function canCreateEntity($entityClassName, $actingUser): bool;
+    public function canCreateEntity(string $entityClassName, $actingUser): bool;
 
     public function canEditEntity($entity, $actingUser): bool;
 
-    public function canEditEntityProperty($entity, $property, $actingUser): bool;
+    public function canEditEntityProperty($entity, string $property, $actingUser): bool;
 }
