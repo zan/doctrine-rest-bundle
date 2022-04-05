@@ -12,7 +12,7 @@ class GenericPermissionsCalculator implements PermissionsCalculatorInterface
     /** @var string[]  */
     private array $writeAbilities = [];
 
-    public function filterQueryBuilder(ZanQueryBuilder $qb, ActorWithAbilitiesInterface $actor)
+    public function filterQueryBuilder(ZanQueryBuilder $qb, ActorWithAbilitiesInterface $actor): void
     {
         // If the actor has an ability that grants read access return without modifying the query builder
         if ($this->anyAbilityMatchesAnySpecification($actor->getAbilities(), $this->readAbilities)) return;
@@ -21,7 +21,7 @@ class GenericPermissionsCalculator implements PermissionsCalculatorInterface
         $qb->andWhere('0 = 1');
     }
 
-    public function canCreateEntity($entityClassName, $actor): bool
+    public function canCreateEntity(string $entityClassName, ActorWithAbilitiesInterface $actor): bool
     {
         // Allow if the user has write permissions
         return $this->anyAbilityMatchesAnySpecification($actor->getAbilities(), $this->writeAbilities);
@@ -33,7 +33,7 @@ class GenericPermissionsCalculator implements PermissionsCalculatorInterface
         return $this->anyAbilityMatchesAnySpecification($actor->getAbilities(), $this->writeAbilities);
     }
 
-    public function canEditEntityProperty($entity, $property, $actor): bool
+    public function canEditEntityProperty($entity, string $property, ActorWithAbilitiesInterface $actor): bool
     {
         // Allow if the user has write permissions
         return $this->anyAbilityMatchesAnySpecification($actor->getAbilities(), $this->writeAbilities);
