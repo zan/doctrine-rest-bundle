@@ -168,6 +168,11 @@ class EntityDataController extends AbstractController
         $user = $this->getUser();
         $permissionsCalculator = $permissionsCalculatorFactory->getPermissionsCalculator($entityClassName);
 
+        // Collection of filters to apply to the result set. If this is used, it must result in exactly one result
+        // and identifier can be left off
+        $hasFilter = false;
+        $filterCollection = new ResultSetFilterCollection();
+
         if (!$permissionsCalculator) {
             throw new ApiException('This entity is not available for API access', 'Zan.Drest.NoPermissionsOnEntity');
         }
@@ -181,6 +186,12 @@ class EntityDataController extends AbstractController
         }
         if ($request->query->has('responseFields')) {
             $responseFields = ZanArray::createFromString($params['responseFields']);
+        }
+        if ($request->query->has('filter')) {
+            $hasFilter = true;
+            // This parameter is json-encoded
+            $decodedFilters = json_decode($request->query->get('filter'), true);
+            $filterCollection->addAndFiltersFromArray($decodedFilters);
         }
 
         // Identifier in the query string overrides one in the route
@@ -212,10 +223,16 @@ class EntityDataController extends AbstractController
 
         $resultSet = new GenericEntityResultSet($entityClassName, $em, $annotationReader);
         $resultSet->setActingUser($user);
-        $resultSet->addIdentifierFilter($identifier);
+        $resultSet->setDataFilterCollection($filterCollection);
+        if (!$hasFilter && $identifier) $resultSet->addIdentifierFilter($identifier);
 
         $entity = $resultSet->getSingleResult();
-        if (!$entity) throw new \InvalidArgumentException('Could not find entity');
+        if (!$entity) {
+            return new JsonResponse([
+                'success' => false,
+                'code' => 'Zan.EntityNotFound',
+            ], 404);
+        }
 
         // Apply field editability information, if requested
         if ($includeEditability) {
