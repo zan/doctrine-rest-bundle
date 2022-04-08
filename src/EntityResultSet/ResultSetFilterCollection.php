@@ -26,7 +26,7 @@ class ResultSetFilterCollection
     public function addAndFiltersFromArray(array $raw)
     {
         foreach ($raw as $rawFilter) {
-            $this->items->add(ResultSetFilter::buildFromArray($raw));
+            $this->items->add(ResultSetFilter::buildFromArray($rawFilter));
         }
     }
     
