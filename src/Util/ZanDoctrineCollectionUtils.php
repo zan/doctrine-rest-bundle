@@ -20,6 +20,16 @@ class ZanDoctrineCollectionUtils
         return false;
     }
 
+    /**
+     * Adds $item to $collection as long as it's not already in $collection
+     */
+    public static function addItem(Collection $collection, $item)
+    {
+        if (static::hasItem($collection, $item)) return;
+
+        $collection->add($item);
+    }
+
     public static function removeItem(Collection $collection, $item)
     {
         foreach ($collection as $currItem) {
