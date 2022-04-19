@@ -77,7 +77,7 @@ class EntityDataController extends AbstractController
             $filterCollection->addAndFiltersFromArray($decodedFilters);
         }
         // Generic free-text search on all results (eg. when typing in a combo box to filter it)
-        if ($request->query->has('query')) {
+        if ($request->query->has('query') && $request->query->get('query') != '') {
             $searchString = $request->query->get('query');
             $searchFields = ZanArray::createFromString($request->query->get('queryFields'));
             if (!$searchFields) throw new ApiException('"queryFields" must be specified when "query" parameter is present');
