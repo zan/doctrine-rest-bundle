@@ -54,6 +54,12 @@ class ZanQueryBuilder extends QueryBuilder
                 $currEntity = $association['targetEntity'];
                 // Next join table will be the alias we just created
                 $joinTableName = $joinAlias;
+
+                // If this is the last property to resolve, return it
+                if (count($pathQueue) === 1) {
+                    $resolvedProperty->setQueryAlias($joinAlias);
+                    return $resolvedProperty;
+                }
             }
             // It's a field on the entity
             else {
@@ -72,7 +78,7 @@ class ZanQueryBuilder extends QueryBuilder
             array_shift($pathQueue);
         }
 
-        throw new \ErrorException('Reached the end of the property specification without finding a field');
+        throw new \ErrorException('Reached the end of the property specification (' . $propertyPath . ') without finding a field');
     }
 
     protected function buildJoinAlias(string $entityNamespace, string $property, ResolvedProperty $resolvedProperty = null): string
