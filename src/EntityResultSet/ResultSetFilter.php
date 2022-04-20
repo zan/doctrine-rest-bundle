@@ -58,6 +58,10 @@ class ResultSetFilter
                 $qb->setParameter($parameterName, $this->value);
             }
         }
+        if ('>=' === $this->operator) {
+            $qb->andWhere("$fieldName >= :$parameterName");
+            $qb->setParameter($parameterName, $this->value);
+        }
         if ('in' === $this->operator) {
             $qb->andWhere("$fieldName in (:$parameterName)");
             $qb->setParameter($parameterName, $this->value);
@@ -70,7 +74,7 @@ class ResultSetFilter
 
     protected function mustBeSupportedOperator($operator)
     {
-        $supported = ['=', 'in', 'like'];
+        $supported = ['=', '>=', 'in', 'like'];
 
         if (!in_array($operator, $supported)) {
             throw new \InvalidArgumentException('Operator must be one of: ' . join(', ', $supported));
