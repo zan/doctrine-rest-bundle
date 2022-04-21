@@ -4,26 +4,76 @@
 namespace Zan\DoctrineRestBundle\Loader;
 
 
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use \Zan\CommonBundle\Util\ZanObject;
 use Zan\DoctrineRestBundle\Loader\EntityPropertyMetadata;
+use Zan\DoctrineRestBundle\Permissions\PermissionsCalculatorFactory;
 use Zan\DoctrineRestBundle\Permissions\PermissionsCalculatorInterface;
 use Doctrine\ORM\EntityManager;
 
+/**
+ * todo: permissionsCalculator is no longer necessary, remove it
+ */
 class ApiEntityLoader
 {
-    /** @var EntityManager */
-    protected $em;
+    protected EntityManagerInterface $em;
 
-    /** @var ?PermissionsCalculatorInterface */
-    protected $permissionsCalculator;
+    protected ?PermissionsCalculatorInterface $permissionsCalculator = null;
 
-    /** @var mixed */
-    protected $actingUser;
+    protected ?PermissionsCalculatorFactory $permissionsCalculatorFactory = null;
 
-    public function __construct(EntityManager $em, $actingUser)
-    {
+    /**
+     * If available, the logged in user for the current request
+     */
+    protected mixed $actingUser = null;
+
+    /**
+     * If available, the HTTP request
+     */
+    protected ?Request $request;
+
+    protected bool $enableDebugging = false;
+
+    public function __construct(
+        EntityManagerInterface $em,
+        ?RequestStack $requestStack = null,
+        ?TokenStorageInterface $tokenStorage = null,
+        ?PermissionsCalculatorFactory $permissionsCalculatorFactory = null,
+    ) {
         $this->em = $em;
+        if ($tokenStorage) {
+            $this->actingUser = $tokenStorage->getToken()?->getUser();
+            dump("Acting user:");
+            dump($this->actingUser);
+        }
+        $this->request = $requestStack?->getCurrentRequest();
+        $this->permissionsCalculatorFactory = $permissionsCalculatorFactory;
+
+        // Check if the client has requested additional debugging information
+        // NOTE: this may be on in a production system
+        if ($this->request && $this->request->query->get('zan_enableDebugging')) {
+            $this->enableDebugging = true;
+        }
+    }
+
+    public function setActingUser($actingUser)
+    {
         $this->actingUser = $actingUser;
+    }
+
+    /**
+     * Loads $entity from JSON data present in the current Request's body
+     */
+    public function loadFromRequest($entity)
+    {
+        if (!$this->request) throw new \LogicException('No HTTP request is available');
+
+        $decodedBody = json_decode($this->request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        $this->load($entity, $decodedBody);
     }
 
     /**
@@ -61,22 +111,33 @@ class ApiEntityLoader
 
     public function load($entity, $rawInput)
     {
-        // todo: this should never try setting the ID
+        $enableDebugging = $this->enableDebugging;
+
         foreach ($rawInput as $propertyName => $value) {
+            // Never attempt to overwrite the ID
+            if ('id' === $propertyName) continue;
+
             $propertyMetadata = new EntityPropertyMetadata(
                 $this->em->getClassMetadata(get_class($entity)),
                 $propertyName
             );
 
             // Skip properties that don't exist on the entity
-            if (!$propertyMetadata->exists) continue;
-
-            // Skip properties that the user cannot edit
-            if (!$this->canEdit($entity, $propertyName)) {
+            if (!$propertyMetadata->exists) {
+                if ($enableDebugging) dump("Not setting ${propertyName}: this property does not exist on " . get_class($entity));
                 continue;
             }
 
+            // Skip properties that the user cannot edit
+            if (!$this->canEdit($entity, $propertyName)) {
+                if ($enableDebugging) dump("Not setting ${propertyName}: user does not have permissions to edit this field on a " . get_class($entity));
+                continue;
+            }
+
+            if ($enableDebugging) dump("Setting " . get_class($entity) . "::${propertyName} to:");
             $resolvedValue = $this->resolveValue($value, $propertyMetadata);
+
+            if ($enableDebugging) dump($resolvedValue);
             ZanObject::setProperty($entity, $propertyName, $resolvedValue);
         }
     }
@@ -114,16 +175,24 @@ class ApiEntityLoader
                 $resolvedEntities = [];
                 foreach ($rawValue as $entityIdOrPropertyValues) {
                     $entityId = null;
-                    // Numeric array, assume this is a flat array of IDs
-                    if (array_key_exists(0, $entityIdOrPropertyValues)) {
-                        $entityId = $entityIdOrPropertyValues;
-                    }
-                    else {
-                        // It might be an existing record where we're getting all the fields
-                        if (array_key_exists('id', $entityIdOrPropertyValues)) {
-                            $entityId = $entityIdOrPropertyValues['id'];
+                    // Check for a complex array representing properties
+                    if (is_array($entityIdOrPropertyValues)) {
+                        // Numeric array, assume this is a flat array of IDs
+                        if (array_key_exists(0, $entityIdOrPropertyValues)) {
+                            $entityId = $entityIdOrPropertyValues;
+                        }
+                        else {
+                            // It might be an existing record where we're getting all the fields
+                            if (array_key_exists('id', $entityIdOrPropertyValues)) {
+                                $entityId = $entityIdOrPropertyValues['id'];
+                            }
                         }
                     }
+                    // Otherwise, it's a simple integer array
+                    else {
+                        $entityId = $entityIdOrPropertyValues;
+                    }
+
                     if ($entityId) {
                         $resolvedEntities[] = $this->resolveEntity($propertyMetadata->targetEntityClass, $entityId);
                     }
@@ -157,10 +226,12 @@ class ApiEntityLoader
 
     protected function canEdit($entity, $property)
     {
-        // Deny by default
-        if (!$this->permissionsCalculator) return false;
+        // Deny if there's no permissions calculator available
+        if (!$this->permissionsCalculatorFactory) return false;
 
-        return $this->permissionsCalculator->canEditEntityProperty($entity, $property, $this->actingUser);
+        return $this->permissionsCalculatorFactory
+            ->getPermissionsCalculator($entity)
+            ->canEditEntityProperty($entity, $property, $this->actingUser);
     }
 
     public function getPermissionsCalculator(): ?PermissionsCalculatorInterface

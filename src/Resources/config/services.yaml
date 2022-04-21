@@ -7,6 +7,8 @@ services:
     resource: '../../Controller'
     tags: ['controller.service_arguments']
 
+  Zan\DoctrineRestBundle\Loader\ApiEntityLoader: ~
+
   Zan\DoctrineRestBundle\EntitySerializer\MinimalEntitySerializer: ~
 
   Zan\DoctrineRestBundle\Permissions\PermissionsCalculatorFactory: ~
