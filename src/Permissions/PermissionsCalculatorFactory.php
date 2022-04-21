@@ -18,6 +18,8 @@ class PermissionsCalculatorFactory
     /** @var Reader */
     protected $annotationReader;
 
+    private array $cache = [];
+
     public function __construct(
         EntityManagerInterface $em,
         Reader $annotationReader
@@ -30,6 +32,10 @@ class PermissionsCalculatorFactory
 
     public function getPermissionsCalculator($entityClassName): ?PermissionsCalculatorInterface
     {
+        if (is_object($entityClassName)) $entityClassName = get_class($entityClassName);
+
+        if (array_key_exists($entityClassName, $this->cache)) return $this->cache[$entityClassName];
+
         /** @var ApiPermissions $apiPermissionsDeclaration */
         $apiPermissionsDeclaration = null;
 
@@ -47,14 +53,19 @@ class PermissionsCalculatorFactory
                 ApiPermissions::class,
                 $entityClassName
             );
-            if (!$apiPermissionsDeclaration) return null;
+            if (!$apiPermissionsDeclaration) {
+                $this->cache[$entityClassName] = null;
+                return null;
+            }
         }
 
 
         // If there's a permissions class, return it
-        // todo: this should work with services
+        // todo: this should be able to instantiate services
         if ($apiPermissionsDeclaration->getPermissionsClass()) {
-            return new ($apiPermissionsDeclaration->getPermissionsClass());
+            $calculator = new ($apiPermissionsDeclaration->getPermissionsClass());
+            $this->cache[$entityClassName] = $calculator;
+            return $calculator;
         }
 
         // Otherwise, build a generic calculator based off information in the annotations
@@ -62,6 +73,7 @@ class PermissionsCalculatorFactory
         $calculator->setReadAbilities($apiPermissionsDeclaration->getReadAbilities());
         $calculator->setWriteAbilities($apiPermissionsDeclaration->getWriteAbilities());
 
+        $this->cache[$entityClassName] = $calculator;
         return $calculator;
     }
 }
