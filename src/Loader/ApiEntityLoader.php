@@ -46,8 +46,6 @@ class ApiEntityLoader
         $this->em = $em;
         if ($tokenStorage) {
             $this->actingUser = $tokenStorage->getToken()?->getUser();
-            dump("Acting user:");
-            dump($this->actingUser);
         }
         $this->request = $requestStack?->getCurrentRequest();
         $this->permissionsCalculatorFactory = $permissionsCalculatorFactory;
