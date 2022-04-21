@@ -4,6 +4,9 @@
 namespace Zan\DoctrineRestBundle\EntitySerializer;
 
 
+use Symfony\Component\HttpFoundation\Request;
+use Zan\CommonBundle\Util\RequestUtils;
+use Zan\CommonBundle\Util\ZanArray;
 use Zan\CommonBundle\Util\ZanObject;
 use Zan\CommonBundle\Util\ZanString;
 use Zan\DoctrineRestBundle\Annotation\ApiEnabled;
@@ -28,6 +31,16 @@ class MinimalEntitySerializer
     {
         $this->em = $em;
         $this->annotationReader = $annotationReader;
+    }
+
+    public function getSerializationMapFromRequest(Request $request): array
+    {
+        if ($request->query->has('responseFields')) {
+            $params = RequestUtils::getParameters($request);
+            return ZanArray::createFromString($params['responseFields']);
+        }
+
+        return [];
     }
 
     public function serialize($entities, array $serializationMap = []): array
