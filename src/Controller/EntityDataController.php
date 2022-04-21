@@ -358,7 +358,8 @@ class EntityDataController extends AbstractController
             throw new \InvalidArgumentException('User does not have permissions to edit entity');
         }
 
-        $entityLoader = new ApiEntityLoader($em, $user);
+        $entityLoader = new ApiEntityLoader($em);
+        $entityLoader->setActingUser($user);
         $entityLoader->setPermissionsCalculator($permissionsCalculator);
 
         $entityLoader->load($entity, $rawData);
@@ -391,7 +392,8 @@ class EntityDataController extends AbstractController
 
         $permissionsCalculator = $permissionsCalculatorFactory->getPermissionsCalculator($entityClassName);
 
-        $entityLoader = new ApiEntityLoader($em, $user);
+        $entityLoader = new ApiEntityLoader($em);
+        $entityLoader->setActingUser($user);
         $entityLoader->setPermissionsCalculator($permissionsCalculator);
 
         $serializer = new MinimalEntitySerializer(
