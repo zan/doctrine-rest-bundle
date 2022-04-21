@@ -168,7 +168,6 @@ class MinimalEntitySerializer
 
             if (!$this->isMethodExposed($method)) continue;
 
-
             $value = $this->getSerializedMethodValue($entity, $method);
 
             $serialized[$propertyName] = $value;
@@ -177,10 +176,17 @@ class MinimalEntitySerializer
         return $serialized;
     }
 
+    /**
+     * todo: enable caching
+     */
     protected function isMethodExposed(\ReflectionMethod $method): bool
     {
         // Only consider public methods
         if (!$method->isPublic()) return false;
+
+        // Check ApiEnabled attribute
+        $apiEnabledAttributes = $method->getAttributes(ApiEnabled::class);
+        if ($apiEnabledAttributes) return true;
 
         $annotations = $this->annotationReader->getMethodAnnotations($method);
 
