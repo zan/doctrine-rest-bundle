@@ -379,6 +379,7 @@ class EntityDataController extends AbstractController
         PermissionsCalculatorFactory $permissionsCalculatorFactory
     ) {
         $params = RequestUtils::getParameters($request);
+        $decodedBody = json_decode($request->getContent(), true);
         $entityClassName = $this->unescapeEntityId($entityId);
         $user = $this->getUser();
         $middlewares = $middlewareRegistry->getMiddlewaresForEntity($entityClassName);
@@ -402,7 +403,7 @@ class EntityDataController extends AbstractController
         );
 
         // Deny access unless there's a calculator that specifically permits access
-        if (!$permissionsCalculator || !$permissionsCalculator->canCreateEntity($entityClassName, $user)) {
+        if (!$permissionsCalculator || !$permissionsCalculator->canCreateEntity($entityClassName, $user, $decodedBody)) {
             $prnPermissionsCalculator = '<NULL>';
             if ($permissionsCalculator) $prnPermissionsCalculator = get_class($permissionsCalculator);
             ZanDebug::dump("Using permissions calculator class: " . $prnPermissionsCalculator);
@@ -412,7 +413,6 @@ class EntityDataController extends AbstractController
             throw new \InvalidArgumentException('User does not have permissions to create entity');
         }
 
-        $decodedBody = json_decode($request->getContent(), true);
         $newEntity = $entityLoader->create($entityClassName, $decodedBody);
 
         $middlewareArguments = new EntityApiMiddlewareEvent($user, $decodedBody, $newEntity);

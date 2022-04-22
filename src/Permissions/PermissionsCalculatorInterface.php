@@ -14,7 +14,7 @@ interface PermissionsCalculatorInterface
 {
     public function filterQueryBuilder(ZanQueryBuilder $qb, ActorWithAbilitiesInterface $actor): void;
 
-    public function canCreateEntity(string $entityClassName, ActorWithAbilitiesInterface $actor): bool;
+    public function canCreateEntity(string $entityClassName, ActorWithAbilitiesInterface $actor, array $rawData = []): bool;
 
     public function canEditEntity($entity, ActorWithAbilitiesInterface $actor): bool;
 

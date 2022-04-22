@@ -21,7 +21,7 @@ class GenericPermissionsCalculator implements PermissionsCalculatorInterface
         $qb->andWhere('0 = 1');
     }
 
-    public function canCreateEntity(string $entityClassName, ActorWithAbilitiesInterface $actor): bool
+    public function canCreateEntity(string $entityClassName, ActorWithAbilitiesInterface $actor, array $rawData = []): bool
     {
         // Allow if the user has write permissions
         return $this->anyAbilityMatchesAnySpecification($actor->getAbilities(), $this->writeAbilities);
