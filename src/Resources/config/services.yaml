@@ -11,6 +11,10 @@ services:
 
   Zan\DoctrineRestBundle\EntitySerializer\MinimalEntitySerializer: ~
 
+  Zan\DoctrineRestBundle\Permissions\PermissionsCalculatorRegistry:
+      arguments:
+          - !tagged_iterator zan.permissions_calculator
+
   Zan\DoctrineRestBundle\Permissions\PermissionsCalculatorFactory: ~
 
   Zan\DoctrineRestBundle\EntityMiddleware\EntityMiddlewareRegistry:

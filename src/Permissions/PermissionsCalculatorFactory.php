@@ -18,16 +18,18 @@ class PermissionsCalculatorFactory
     /** @var Reader */
     protected $annotationReader;
 
+    protected PermissionsCalculatorRegistry $calculatorRegistry;
+
     private array $cache = [];
 
     public function __construct(
         EntityManagerInterface $em,
-        Reader $annotationReader
+        Reader $annotationReader,
+        PermissionsCalculatorRegistry $calculatorRegistry,
     ) {
         $this->em = $em;
         $this->annotationReader = $annotationReader;
-
-        return $this;
+        $this->calculatorRegistry = $calculatorRegistry;
     }
 
     public function getPermissionsCalculator($entityClassName): ?PermissionsCalculatorInterface
@@ -60,12 +62,21 @@ class PermissionsCalculatorFactory
         }
 
 
-        // If there's a permissions class, return it
-        // todo: this should be able to instantiate services
+        // Look for the class as a registered service
         if ($apiPermissionsDeclaration->getPermissionsClass()) {
-            $calculator = new ($apiPermissionsDeclaration->getPermissionsClass());
-            $this->cache[$entityClassName] = $calculator;
-            return $calculator;
+            foreach ($this->calculatorRegistry->getCalculators() as $calculator) {
+                if (get_class($calculator) === $apiPermissionsDeclaration->getPermissionsClass()) {
+                    $this->cache[$entityClassName] = $calculator;
+                    return $calculator;
+                }
+            }
+
+            // Calculator not found
+            throw new \ErrorException(sprintf(
+                '%s is using permissions calculator class %s but it is not defined as a service',
+                $entityClassName,
+                $apiPermissionsDeclaration->getPermissionsClass(),
+            ));
         }
 
         // Otherwise, build a generic calculator based off information in the annotations
