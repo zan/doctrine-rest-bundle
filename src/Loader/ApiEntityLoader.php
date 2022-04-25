@@ -111,6 +111,11 @@ class ApiEntityLoader
     {
         $enableDebugging = $this->enableDebugging;
 
+        if ($enableDebugging) {
+            dump('Loading ' . get_class($entity) . '#' . $entity->getId() . ' with');
+            dump($rawInput);
+        }
+
         foreach ($rawInput as $propertyName => $value) {
             // Never attempt to overwrite the ID
             if ('id' === $propertyName) continue;
