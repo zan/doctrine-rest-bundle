@@ -88,8 +88,8 @@ class EntityDataController extends AbstractController
             }
 
             foreach ($searchFields as $field) {
-                $filter = [ 'property' => $field, 'operator' => 'like', 'value' => $searchString ];
-                $filterCollection->addAndFiltersFromArray($filter);
+                $filter = ResultSetFilter::buildFromArray(['property' => $field, 'operator' => 'like', 'value' => $searchString]);
+                $filterCollection->addAndFilter($filter);
             }
         }
 
@@ -279,6 +279,7 @@ class EntityDataController extends AbstractController
         string $identifier,
         Request $request,
         EntityManagerInterface $em,
+        ApiEntityLoader $entityLoader,
         Reader $annotationReader,
         PermissionsCalculatorFactory $permissionsCalculatorFactory
     ) {
@@ -289,8 +290,6 @@ class EntityDataController extends AbstractController
         if ($request->query->has('responseFields')) {
             $responseFields = ZanArray::createFromString($params['responseFields']);
         }
-
-        $permissionsCalculator = $permissionsCalculatorFactory->getPermissionsCalculator($entityClassName);
 
         $serializer = new MinimalEntitySerializer(
             $em,
@@ -303,12 +302,12 @@ class EntityDataController extends AbstractController
         // An array of records means a bulk update
         if (ZanArray::isNotMap($decodedBody)) {
             foreach ($decodedBody as $rawEntityData) {
-                $updatedEntities[] = $this->updateSingleEntity($entityClassName, $rawEntityData['id'], $rawEntityData, $permissionsCalculator, $em, $annotationReader);
+                $updatedEntities[] = $this->updateSingleEntity($entityClassName, $rawEntityData['id'], $rawEntityData, $entityLoader, $em, $annotationReader);
             }
         }
         // Updating a single entity (this returns a response with a single entity, see below)
         else {
-            $updatedEntities[] = $this->updateSingleEntity($entityClassName, $identifier, $decodedBody, $permissionsCalculator, $em, $annotationReader);
+            $updatedEntities[] = $this->updateSingleEntity($entityClassName, $identifier, $decodedBody, $entityLoader, $em, $annotationReader);
         }
 
         // Commit changes to the database
@@ -339,8 +338,8 @@ class EntityDataController extends AbstractController
         $entityClassName,
         $identifier,
         $rawData,
-        $permissionsCalculator,
-        $em,
+        ApiEntityLoader $entityLoader,
+        EntityManagerInterface $em,
         $annotationReader
     ) {
         $user = $this->getUser();
@@ -351,16 +350,6 @@ class EntityDataController extends AbstractController
 
         $entity = $resultSet->getSingleResult();
         if (!$entity) throw new \InvalidArgumentException("No entity found with the specified identifier");
-
-        // Deny access unless there's a calculator that specifically permits access
-        if (!$permissionsCalculator || !$permissionsCalculator->canEditEntity($entity, $user)) {
-            // todo: better exceptions here and when not found
-            throw new \InvalidArgumentException('User does not have permissions to edit entity');
-        }
-
-        $entityLoader = new ApiEntityLoader($em);
-        $entityLoader->setActingUser($user);
-        $entityLoader->setPermissionsCalculator($permissionsCalculator);
 
         $entityLoader->load($entity, $rawData);
 
