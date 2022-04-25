@@ -23,6 +23,11 @@ class ResultSetFilterCollection
         $this->items = new ArrayCollection();
     }
 
+    public function addAndFilter(ResultSetFilter $filter)
+    {
+        $this->items->add($filter);
+    }
+
     public function addAndFiltersFromArray(array $raw)
     {
         foreach ($raw as $rawFilter) {
