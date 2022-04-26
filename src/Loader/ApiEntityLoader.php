@@ -81,6 +81,13 @@ class ApiEntityLoader
      */
     public function create($entityClassName, $rawInput)
     {
+        $enableDebugging = $this->enableDebugging;
+
+        if ($enableDebugging) {
+            dump('Creating a new ' . $entityClassName . ' with');
+            dump($rawInput);
+        }
+
         // Ensure all required arguments are available so we can call the constructor
         $requiredArgs = ZanObject::getRequiredConstructorArguments($entityClassName);
         $constructorArgs = [];
