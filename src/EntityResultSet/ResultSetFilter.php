@@ -48,7 +48,7 @@ class ResultSetFilter
         
         $parameterName = $qb->generateUniqueParameterName($fieldName);
 
-        if ('=' === $this->operator) {
+        if ('=' === $this->operator || '==' === $this->operator) {
             // Special case for null
             if (null === $this->value) {
                 $qb->andWhere("$fieldName IS NULL");
@@ -74,7 +74,7 @@ class ResultSetFilter
 
     protected function mustBeSupportedOperator($operator)
     {
-        $supported = ['=', '>=', 'in', 'like'];
+        $supported = ['=', '==', '>=', 'in', 'like'];
 
         if (!in_array($operator, $supported)) {
             throw new \InvalidArgumentException('Operator must be one of: ' . join(', ', $supported));
