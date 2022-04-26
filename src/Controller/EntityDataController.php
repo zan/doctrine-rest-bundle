@@ -365,7 +365,8 @@ class EntityDataController extends AbstractController
         EntityManagerInterface $em,
         Reader $annotationReader,
         EntityMiddlewareRegistry $middlewareRegistry,
-        PermissionsCalculatorFactory $permissionsCalculatorFactory
+        PermissionsCalculatorFactory $permissionsCalculatorFactory,
+        ApiEntityLoader $entityLoader,
     ) {
         $params = RequestUtils::getParameters($request);
         $decodedBody = json_decode($request->getContent(), true);
@@ -381,10 +382,6 @@ class EntityDataController extends AbstractController
         if (!$entityClassName) throw new \InvalidArgumentException('entityClassName is required');
 
         $permissionsCalculator = $permissionsCalculatorFactory->getPermissionsCalculator($entityClassName);
-
-        $entityLoader = new ApiEntityLoader($em);
-        $entityLoader->setActingUser($user);
-        $entityLoader->setPermissionsCalculator($permissionsCalculator);
 
         $serializer = new MinimalEntitySerializer(
             $em,
