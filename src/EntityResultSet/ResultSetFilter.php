@@ -47,8 +47,14 @@ class ResultSetFilter
         }
         
         $parameterName = $qb->generateUniqueParameterName($fieldName);
+        $operator = $this->operator;
 
-        if ('=' === $this->operator || '==' === $this->operator) {
+        // Special case: Ext will pass '=' with a value array, this needs to be an 'IN' query
+        if ('=' === $this->operator && is_array($this->value)) {
+            $operator = 'in';
+        }
+
+        if ('=' === $operator || '==' === $operator) {
             // Special case for null
             if (null === $this->value) {
                 $qb->andWhere("$fieldName IS NULL");
@@ -58,23 +64,55 @@ class ResultSetFilter
                 $qb->setParameter($parameterName, $this->value);
             }
         }
-        if ('>=' === $this->operator) {
+        if ('!=' === $operator) {
+            // Special case for null
+            if (null === $this->value) {
+                $qb->andWhere("$fieldName IS NOT NULL");
+            }
+            else {
+                $qb->andWhere("$fieldName != :$parameterName");
+                $qb->setParameter($parameterName, $this->value);
+            }
+        }
+        if ('>' === $operator) {
+            $qb->andWhere("$fieldName > :$parameterName");
+            $qb->setParameter($parameterName, $this->value);
+        }
+        if ('>=' === $operator) {
             $qb->andWhere("$fieldName >= :$parameterName");
             $qb->setParameter($parameterName, $this->value);
         }
-        if ('in' === $this->operator) {
-            $qb->andWhere("$fieldName in (:$parameterName)");
+        if ('<' === $operator) {
+            $qb->andWhere("$fieldName < :$parameterName");
             $qb->setParameter($parameterName, $this->value);
         }
-        if ('like' === $this->operator) {
-            $qb->andWhere("$fieldName like :$parameterName");
+        if ('<=' === $operator) {
+            $qb->andWhere("$fieldName <= :$parameterName");
+            $qb->setParameter($parameterName, $this->value);
+        }
+        if ('in' === $operator) {
+            $qb->andWhere("$fieldName IN (:$parameterName)");
+            $qb->setParameter($parameterName, $this->value);
+        }
+        if ('notin' === $operator) {
+            $qb->andWhere("$fieldName NOT IN (:$parameterName)");
+            $qb->setParameter($parameterName, $this->value);
+        }
+        if ('like' === $operator) {
+            $qb->andWhere("$fieldName LIKE :$parameterName");
             $qb->setParameter($parameterName, ZanSql::escapeLikeParameter($this->value));
+        }
+        if ('empty' === $operator) {
+            $qb->andWhere("$fieldName = '' OR $fieldName IS NULL");
+        }
+        if ('notempty' === $operator || 'nempty' === $operator) {
+            $qb->andWhere("$fieldName != '' AND $fieldName IS NOT NULL");
         }
     }
 
     protected function mustBeSupportedOperator($operator)
     {
-        $supported = ['=', '==', '>=', 'in', 'like'];
+        $supported = ['=', '==', '!=', '>', '>=', '<', '<=', 'in', 'notin', 'like', 'empty', 'notempty', 'nempty'];
 
         if (!in_array($operator, $supported)) {
             throw new \InvalidArgumentException('Operator must be one of: ' . join(', ', $supported));
