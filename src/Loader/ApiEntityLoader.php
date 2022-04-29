@@ -121,6 +121,8 @@ class ApiEntityLoader
         if ($enableDebugging) {
             dump('Loading ' . get_class($entity) . '#' . $entity->getId() . ' with');
             dump($rawInput);
+
+            dump('Using permissions calculator: ' . get_class($this->permissionsCalculatorFactory->getPermissionsCalculator($entity)));
         }
 
         foreach ($rawInput as $propertyName => $value) {
