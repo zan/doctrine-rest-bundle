@@ -64,7 +64,17 @@ class EntityPropertyEditabilityMap
             }
         }
 
-        // todo: associations?
+        // Associations
+        foreach ($classMetadata->getAssociationMappings() as $associationMapping) {
+            // Ignore properties that aren't accessible by the entity API system
+            if (!$this->propertyAvailableToApi($entity, $associationMapping['fieldName'])) continue;
+
+            if ($this->permissionsCalculator->canEditEntityProperty($entity, $associationMapping['fieldName'], $this->actingUser)) {
+                $this->editableProperties[] = $associationMapping['fieldName'];
+            } else {
+                $this->readOnlyProperties[] = $associationMapping['fieldName'];
+            }
+        }
     }
 
     public function getCompressedMap()
