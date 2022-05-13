@@ -28,6 +28,16 @@ class ResultSetFilter
     {
         $this->mustBeSupportedOperator($operator);
 
+        // If it looks like a javascript date, convert it to one that SQL will understand
+        // todo: should be more reliable and check whether the property being queried is a \DateTimeInterface?
+        // todo: convert date to a \DateTimeImmutable
+        if (is_string($value)) {
+            $parsesAsDate = \DateTimeImmutable::createFromFormat(DATE_RFC3339_EXTENDED, $value);
+            if ($parsesAsDate !== false) {
+                $value = $parsesAsDate->format('Y-m-d H:i:s');
+            }
+        }
+
         $this->property = $property;
         $this->value = $value;
         $this->operator = $operator;
