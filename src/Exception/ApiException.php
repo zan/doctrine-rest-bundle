@@ -2,7 +2,7 @@
 
 namespace Zan\DoctrineRestBundle\Exception;
 
-use JetBrains\PhpStorm\Internal\LanguageLevelTypeAware;
+use Zan\DoctrineRestBundle\Api\Error;
 
 class ApiException extends \ErrorException
 {
@@ -11,7 +11,7 @@ class ApiException extends \ErrorException
      */
     private string $clientErrorCode;
 
-    public function __construct(string $message = '', string $clientErrorCode = 'Zan.Drest.ApiException')
+    public function __construct(string $message = '', string $clientErrorCode = Error::GENERIC_ERROR)
     {
         parent::__construct($message);
 
