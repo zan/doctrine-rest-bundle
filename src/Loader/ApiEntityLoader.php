@@ -125,6 +125,8 @@ class ApiEntityLoader
             dump('Using permissions calculator: ' . get_class($this->permissionsCalculatorFactory->getPermissionsCalculator($entity)));
         }
 
+        // todo: this might need additional checking to guarantee the entityVersion field is always editable if other fields are?
+
         foreach ($rawInput as $propertyName => $value) {
             // Never attempt to overwrite the ID
             if ('id' === $propertyName) continue;
