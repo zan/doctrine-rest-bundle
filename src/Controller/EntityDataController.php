@@ -4,7 +4,7 @@
 namespace Zan\DoctrineRestBundle\Controller;
 
 
-use Modules\PosterPrintingBundle\EntityApi\PosterPrintingRequestMiddleware;
+use Doctrine\ORM\OptimisticLockException;
 use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Workflow\Registry;
@@ -13,6 +13,7 @@ use Zan\CommonBundle\Util\ZanAnnotation;
 use Zan\CommonBundle\Util\ZanArray;
 use Zan\CommonBundle\Util\ZanDebug;
 use Zan\DoctrineRestBundle\Annotation\PublicId;
+use Zan\DoctrineRestBundle\Api\Error;
 use Zan\DoctrineRestBundle\EntityMiddleware\EntityApiMiddlewareEvent;
 use Zan\DoctrineRestBundle\EntityMiddleware\EntityMiddlewareRegistry;
 use Zan\DoctrineRestBundle\EntityResultSet\AbstractEntityResultSet;
@@ -62,7 +63,7 @@ class EntityDataController extends AbstractController
         $entityClassName = $this->unescapeEntityId($entityId);
         $permissionsCalculator = $permissionsCalculatorFactory->getPermissionsCalculator($entityClassName);
         if (!$permissionsCalculator) {
-            throw new ApiException('This entity is not available for API access', 'Zan.Drest.NoPermissionsOnEntity');
+            throw new ApiException('This entity is not available for API access', Error::NO_ENTITY_PERMISSIONS);
         }
 
         if ($request->query->has('includeMetadata')) {
@@ -174,7 +175,7 @@ class EntityDataController extends AbstractController
         $filterCollection = new ResultSetFilterCollection();
 
         if (!$permissionsCalculator) {
-            throw new ApiException('This entity is not available for API access', 'Zan.Drest.NoPermissionsOnEntity');
+            throw new ApiException('This entity is not available for API access', Error::NO_ENTITY_PERMISSIONS);
         }
 
         $responseFields = [];
@@ -311,7 +312,15 @@ class EntityDataController extends AbstractController
         }
 
         // Commit changes to the database
-        $em->flush();
+        try {
+            $em->flush();
+        }
+        catch (OptimisticLockException $e) {
+            // Graceful handling is only implemented for single entities
+            if (count($updatedEntities) > 1) throw $e;
+
+            return $this->buildConflictingEditResponse($updatedEntities[0]);
+        }
 
         $serializedData = null;
         // Single entity updated
@@ -462,6 +471,26 @@ class EntityDataController extends AbstractController
 
         // todo: permission checks
         return new JsonResponse(['success' => true]);
+    }
+
+    /**
+     * Builds a response for use when there are conflicting edits to an entity
+     */
+    protected function buildConflictingEditResponse($entity)
+    {
+        $retData = [
+            'success' => false,
+            'errorMessage' => 'These changes conflict with a newer revision of this entity',
+            'errorCode' => Error::CONFLICTING_EDITS,
+            'entityNamespace' => get_class($entity),
+        ];
+
+        if (method_exists($entity, 'getId')) {
+            $retData['entityKey'] = $entity->getId();
+        }
+
+        // HTTP 409 - Conflict
+        return new JsonResponse($retData, 409);
     }
 
     protected function applySortParameter(AbstractEntityResultSet $resultSet, $rawFilter)
