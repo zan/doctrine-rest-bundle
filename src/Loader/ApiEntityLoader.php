@@ -185,7 +185,7 @@ class ApiEntityLoader
 
         if ('entity' === $propertyMetadata->dataType) {
             // Multi-value association and $rawValue is an array, eg. OneToMany or ManyToMany
-            if ($propertyMetadata->isToManyAssociation() && is_array($rawValue)) {
+            if ($propertyMetadata->isToManyAssociation()) {
                 $resolvedEntities = [];
                 foreach ($rawValue as $entityIdOrPropertyValues) {
                     $entityId = null;
@@ -221,7 +221,15 @@ class ApiEntityLoader
             }
             // A single entity, eg. ManyToOne or OneToOne
             else {
-                return $this->resolveEntity($propertyMetadata->targetEntityClass, $rawValue);
+                // We're loading into a single-value association but an "object" was passed, assume it represents a
+                // serialized object and extract the ID
+                if (is_array($rawValue)) {
+                    return $this->resolveEntity($propertyMetadata->targetEntityClass, $rawValue['id']);
+                }
+                // Scalar value representing an ID
+                else {
+                    return $this->resolveEntity($propertyMetadata->targetEntityClass, $rawValue);
+                }
             }
         }
 
