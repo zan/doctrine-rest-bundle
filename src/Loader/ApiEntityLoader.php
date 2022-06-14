@@ -9,6 +9,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use \Zan\CommonBundle\Util\ZanObject;
+use Zan\DoctrineRestBundle\Api\Error;
+use Zan\DoctrineRestBundle\Exception\ApiException;
 use Zan\DoctrineRestBundle\Loader\EntityPropertyMetadata;
 use Zan\DoctrineRestBundle\Permissions\PermissionsCalculatorFactory;
 use Zan\DoctrineRestBundle\Permissions\PermissionsCalculatorInterface;
@@ -105,6 +107,10 @@ class ApiEntityLoader
                 $constructorArgs[] = $resolvedValue;
             }
         }
+        if ($requiredArgs && $enableDebugging) {
+            dump("With required constructor arguments: ");
+            dump($constructorArgs);
+        }
 
         $reflectionClass = new \ReflectionClass($entityClassName);
         $newEntity = $reflectionClass->newInstanceArgs($constructorArgs);
@@ -152,7 +158,17 @@ class ApiEntityLoader
             $resolvedValue = $this->resolveValue($value, $propertyMetadata);
 
             if ($enableDebugging) dump($resolvedValue);
-            ZanObject::setProperty($entity, $propertyName, $resolvedValue);
+            $success = ZanObject::setProperty($entity, $propertyName, $resolvedValue);
+            if (!$success) {
+                throw new ApiException(
+                    sprintf(
+                        'Could not set "%s" on "%s" because it does not have a setter',
+                        $propertyName,
+                        get_class($entity),
+                    ),
+                    Error::NO_ENTITY_PROPERTY_SETTER,
+                );
+            }
         }
     }
 
