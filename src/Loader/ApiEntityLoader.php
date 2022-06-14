@@ -90,25 +90,28 @@ class ApiEntityLoader
             dump($rawInput);
         }
 
-        // Ensure all required arguments are available so we can call the constructor
-        $requiredArgs = ZanObject::getRequiredConstructorArguments($entityClassName);
-        $constructorArgs = [];
-        foreach ($requiredArgs as $arg) {
-            foreach ($rawInput as $key => $value) {
-                // Find parameters in the API call that match required arguments
-                if ($key != $arg->getName()) continue;
+        // Inject constructor parameters if available
+        $class = new \ReflectionClass($entityClassName);
+        $constructor = $class->getConstructor();
+        if ($constructor) {
+            foreach ($constructor->getParameters() as $parameter) {
+                foreach ($rawInput as $key => $value) {
+                    // Find parameters in the API call that match required arguments
+                    if ($key != $parameter->getName()) continue;
 
-                $propertyMetadata = new EntityPropertyMetadata(
-                    $this->em->getClassMetadata($entityClassName),
-                    $key
-                );
+                    $propertyMetadata = new EntityPropertyMetadata(
+                        $this->em->getClassMetadata($entityClassName),
+                        $key
+                    );
 
-                $resolvedValue = $this->resolveValue($value, $propertyMetadata);
-                $constructorArgs[] = $resolvedValue;
+                    $resolvedValue = $this->resolveValue($value, $propertyMetadata);
+                    $constructorArgs[] = $resolvedValue;
+                }
             }
         }
-        if ($requiredArgs && $enableDebugging) {
-            dump("With required constructor arguments: ");
+
+        if ($constructor->getParameters() && $enableDebugging) {
+            dump("With constructor arguments: ");
             dump($constructorArgs);
         }
 
