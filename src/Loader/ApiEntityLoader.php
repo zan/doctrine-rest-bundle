@@ -93,6 +93,7 @@ class ApiEntityLoader
         // Inject constructor parameters if available
         $class = new \ReflectionClass($entityClassName);
         $constructor = $class->getConstructor();
+        $constructorArgs = [];
         if ($constructor) {
             foreach ($constructor->getParameters() as $parameter) {
                 foreach ($rawInput as $key => $value) {
@@ -110,7 +111,7 @@ class ApiEntityLoader
             }
         }
 
-        if ($constructor->getParameters() && $enableDebugging) {
+        if ($constructor && $constructor->getParameters() && $enableDebugging) {
             dump("With constructor arguments: ");
             dump($constructorArgs);
         }
