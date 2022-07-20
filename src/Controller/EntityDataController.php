@@ -287,6 +287,7 @@ class EntityDataController extends AbstractController
         $params = RequestUtils::getParameters($request);
         $entityClassName = $this->unescapeEntityId($entityId);
         $responseFields = [];
+        $isBulkOperation = false;
 
         if ($request->query->has('responseFields')) {
             $responseFields = ZanArray::createFromString($params['responseFields']);
@@ -302,6 +303,8 @@ class EntityDataController extends AbstractController
 
         // An array of records means a bulk update
         if (ZanArray::isNotMap($decodedBody)) {
+            $isBulkOperation = true;
+
             foreach ($decodedBody as $rawEntityData) {
                 $updatedEntities[] = $this->updateSingleEntity($entityClassName, $rawEntityData['id'], $rawEntityData, $entityLoader, $em, $annotationReader);
             }
@@ -323,16 +326,14 @@ class EntityDataController extends AbstractController
         }
 
         $serializedData = null;
-        // Single entity updated
-        if (count($updatedEntities) === 1) {
-            $serializedData = $serializer->serialize($updatedEntities[0], $responseFields);
-        }
-        // Bulk update
-        else {
+        if (!$isBulkOperation) {
             $serializedData = [];
             foreach ($updatedEntities as $updatedEntity) {
                 $serializedData[] = $serializer->serialize($updatedEntity, $responseFields);
             }
+        }
+        else {
+            $serializedData = $serializer->serialize($updatedEntities[0], $responseFields);
         }
 
         $retData = [
