@@ -383,6 +383,7 @@ class EntityDataController extends AbstractController
         $entityClassName = $this->unescapeEntityId($entityId);
         $user = $this->getUser();
         $middlewares = $middlewareRegistry->getMiddlewaresForEntity($entityClassName);
+        $isBulkOperation = false;
 
         $responseFields = [];
         if ($request->query->has('responseFields')) {
@@ -409,30 +410,64 @@ class EntityDataController extends AbstractController
             throw new \InvalidArgumentException('User does not have permissions to create entity');
         }
 
-        $newEntity = $entityLoader->create($entityClassName, $decodedBody);
+        $newEntitiesRaw = [];
 
-        $middlewareArguments = new EntityApiMiddlewareEvent($user, $decodedBody, $newEntity);
+        // An array of records means a bulk update
+        if (ZanArray::isNotMap($decodedBody)) {
+            $isBulkOperation = true;
 
-        // beforeCreate middleware
-        foreach ($middlewares as $middleware) {
-            $middleware->beforeCreate($middlewareArguments);
+            foreach ($decodedBody as $rawEntityData) {
+                $newEntitiesRaw[] = $rawEntityData;
+            }
+        }
+        // Updating a single entity (this returns a response with a single entity, see below)
+        else {
+            $newEntitiesRaw = [ $decodedBody ];
         }
 
-        // Commit changes to the database
-        $em->persist($newEntity);
+        $newEntities = [];
+        foreach ($newEntitiesRaw as $rawData) {
+            $newEntity = $entityLoader->create($entityClassName, $rawData);
+
+            $middlewareArguments = new EntityApiMiddlewareEvent($user, $rawData, $newEntity);
+
+            // beforeCreate middleware
+            foreach ($middlewares as $middleware) {
+                $middleware->beforeCreate($middlewareArguments);
+            }
+
+            // Commit changes to the database
+            $em->persist($newEntity);
+            $newEntities[] = $newEntity;
+        }
+
         $em->flush();
 
         // afterCreate middleware
-        foreach ($middlewares as $middleware) {
-            $middleware->afterCreate($middlewareArguments);
+        foreach ($newEntities as $newEntity) {
+            $middlewareArguments = new EntityApiMiddlewareEvent($user, $rawData, $newEntity);
+
+            foreach ($middlewares as $middleware) {
+                $middleware->afterCreate($middlewareArguments);
+            }
         }
 
         // Flush again to pick up changes in middleware
         if (count($middlewares) > 0) $em->flush();
 
+        $serialized = [];
+        if ($isBulkOperation) {
+            $serialized = $serializer->serialize($newEntities[0], $responseFields);
+        }
+        else {
+            foreach ($newEntities as $newEntity) {
+                $serialized[] = $serializer->serialize($newEntity, $responseFields);
+            }
+        }
+
         $retData = [
             'success' => true,
-            'data' => $serializer->serialize($newEntity, $responseFields),
+            'data' => $serialized,
         ];
 
         return new JsonResponse($retData);
