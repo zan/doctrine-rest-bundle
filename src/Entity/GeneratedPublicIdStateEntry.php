@@ -31,7 +31,7 @@ class GeneratedPublicIdStateEntry
      *
      * @ORM\Column(type="json", nullable=true)
      */
-    private ?string $state = null;
+    private mixed $state = null;
 
     public function __construct(string $entityNamespace)
     {
@@ -53,12 +53,12 @@ class GeneratedPublicIdStateEntry
         $this->entityNamespace = $entityNamespace;
     }
 
-    public function getState(): ?string
+    public function getState(): mixed
     {
         return $this->state;
     }
 
-    public function setState(?string $state): void
+    public function setState(mixed $state): void
     {
         $this->state = $state;
     }
