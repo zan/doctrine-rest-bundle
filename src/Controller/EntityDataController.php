@@ -413,7 +413,7 @@ class EntityDataController extends AbstractController
         $newEntitiesRaw = [];
 
         // An array of records means a bulk update
-        if (ZanArray::isNotMap($decodedBody)) {
+        if ($decodedBody && ZanArray::isNotMap($decodedBody)) {
             $isBulkOperation = true;
 
             foreach ($decodedBody as $rawEntityData) {
