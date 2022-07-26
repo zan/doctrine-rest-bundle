@@ -15,6 +15,11 @@ class ResultSetFilter
 
     private $value;
 
+    /**
+     * If the value can be parsed as a date this property will hold a \DateTimeImmutable
+     */
+    private ?\DateTimeImmutable $valueAsDate;
+
     public static function buildFromArray($raw): ResultSetFilter
     {
         $f = new ResultSetFilter($raw['property'], $raw['value'] ?? '');
@@ -35,6 +40,7 @@ class ResultSetFilter
             $parsesAsDate = \DateTimeImmutable::createFromFormat(DATE_RFC3339_EXTENDED, $value);
             if ($parsesAsDate !== false) {
                 $value = $parsesAsDate->format('Y-m-d H:i:s');
+                $this->valueAsDate = $parsesAsDate;
             }
         }
 
@@ -118,11 +124,33 @@ class ResultSetFilter
         if ('notempty' === $operator || 'nempty' === $operator) {
             $qb->andWhere("$fieldName != '' AND $fieldName IS NOT NULL");
         }
+
+        // Date-specific filters
+        if ('onday' === $operator || 'notonday' === $operator) {
+            if (null === $this->valueAsDate) throw new \InvalidArgumentException('onday and notonday require a valid date');
+
+            $referenceDate = $this->valueAsDate;
+            $startAt = $referenceDate->setTime(0, 0, 0);
+            $endAt = $referenceDate->setTime(23, 59, 59); // BETWEEN is inclusive
+
+            $startParamName = $qb->generateUniqueParameterName($fieldName . '_start');
+            $endParamName = $qb->generateUniqueParameterName($fieldName . '_end');
+
+            $sqlOperator = ($operator === 'onday') ? 'BETWEEN' : 'NOT BETWEEN';
+
+            $qb->andWhere("$fieldName $sqlOperator :$startParamName AND :$endParamName");
+            $qb->setParameter($startParamName, $startAt);
+            $qb->setParameter($endParamName, $endAt);
+        }
     }
 
     protected function mustBeSupportedOperator($operator)
     {
         $supported = ['=', '==', '!=', '>', '>=', '<', '<=', 'in', 'notin', 'like', 'empty', 'notempty', 'nempty'];
+
+        // Date filters so that users can choose a day and see all results on that day
+        $supported[] = 'onday';
+        $supported[] = 'notonday';
 
         if (!in_array($operator, $supported)) {
             throw new \InvalidArgumentException('Operator must be one of: ' . join(', ', $supported));
