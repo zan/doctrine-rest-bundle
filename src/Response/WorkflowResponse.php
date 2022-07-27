@@ -67,8 +67,23 @@ class WorkflowResponse
             $validGraphTransitions[] = $serialized;
         }
 
+        // Add in information about the entity
+        $entityInfo = [
+            'namespace' => get_class($this->entity),
+        ];
+        if (method_exists($this->entity, 'getId')) {
+            $entityInfo['id'] = $this->entity->getId();
+        }
+        if (method_exists($this->entity, 'getEntityVersion')) {
+            $entityInfo['version'] = $this->entity->getEntityVersion();
+        }
+        if (method_exists($this->entity, 'getWorkflowStatus')) {
+            $entityInfo['workflowStatus'] = $this->entity->getWorkflowStatus();
+        }
+
         return [
             'name' => $this->workflow->getName(),
+            'entity' => $entityInfo,
             'marking' => $marking,
             'places' => $places,
             'validGraphTransitions' => $validGraphTransitions,
