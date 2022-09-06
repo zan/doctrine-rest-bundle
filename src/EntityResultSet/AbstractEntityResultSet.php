@@ -5,6 +5,7 @@ namespace Zan\DoctrineRestBundle\EntityResultSet;
 
 
 use Doctrine\Common\Annotations\Reader;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\Id;
 use Doctrine\ORM\Query\Expr\Orx;
 use Doctrine\ORM\Tools\Pagination\Paginator;
@@ -21,7 +22,7 @@ use Doctrine\ORM\QueryBuilder;
 
 abstract class AbstractEntityResultSet
 {
-    /** @var EntityManager */
+    /** @var EntityManagerInterface */
     protected $em;
 
     /** @var Reader */
@@ -67,7 +68,7 @@ abstract class AbstractEntityResultSet
 
     public function __construct(
         string $entityClassName,
-        EntityManager $em,
+        EntityManagerInterface $em,
         Reader $annotationReader,
     ) {
         $this->em = $em;
