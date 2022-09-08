@@ -119,7 +119,7 @@ class EntityDataController extends AbstractController
 
         $editabilityMap = null;
         $includeEditability = false;
-        if (in_array('editability', $includeMetadata)) {
+        if (in_array('editability', $includeMetadata) || in_array('permissions', $includeMetadata)) {
             $includeEditability = true;
             $editabilityMap = new ResultSetEditabilityMap(
                 $permissionsCalculator,
@@ -142,6 +142,11 @@ class EntityDataController extends AbstractController
 
         if ($includeEditability) {
             $metadata['editability'] = $editabilityMap->getCompressedMap();
+        }
+
+        if (in_array('permissions', $includeMetadata)) {
+            $canCreateEntities = $permissionsCalculator->canCreateEntity($entityClassName, $this->getUser(), $params);
+            $metadata['canCreateEntities'] = $canCreateEntities;
         }
 
         return new JsonResponse([
