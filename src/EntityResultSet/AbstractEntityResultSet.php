@@ -60,7 +60,9 @@ abstract class AbstractEntityResultSet
     protected $orderBys = [];
 
     protected $firstResultOffset = 0;
-    protected $maxNumResults = 100;
+
+    /** @var int|null Maximum number of results to return per page (null means no limit) */
+    protected ?int $maxNumResults = null;
 
     protected ZanQueryBuilder $qb;
 
