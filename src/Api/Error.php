@@ -7,6 +7,7 @@ class Error
     public const GENERIC_ERROR              = 'Zan.Drest.ApiException';
 
     // Entity-specific errors
+    public const NO_ENTITY                   = 'Zan.Drest.NoEntity';
     public const NO_ENTITY_PERMISSIONS       = 'Zan.Drest.NoPermissionsOnEntity';
     public const NO_ENTITY_PROPERTY_SETTER   = 'Zan.Drest.NoEntityPropertySetter';
 
