@@ -30,5 +30,5 @@ interface GeneratedPublicIdInterface
      * The entity must use the current GeneratedPublicIdStateEntry to generate a new publicId and then update
      * $publicIdState for the next entity that needs it
      */
-    public function applyGeneratedPublicIdState(GeneratedPublicIdStateEntry $publicIdState);
+    public function applyGeneratedPublicIdState(GeneratedPublicIdStateEntry $publicIdState): void;
 }
