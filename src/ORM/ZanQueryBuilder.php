@@ -27,14 +27,23 @@ class ZanQueryBuilder extends QueryBuilder
      */
     public function resolveProperty($propertyPath): ResolvedProperty
     {
+        $rootEntity = $this->getRootEntityNamespace();
         $pathQueue = explode('.', $propertyPath);
 
         // Early exit if there are no dots in the property path since that means it's directly on the entity being queried
         if (count($pathQueue) === 1) {
-            return new ResolvedProperty($this->getRootAlias() . '.' . $propertyPath);
+            $classMetadata = $this->getEntityManager()->getClassMetadata($rootEntity);
+            if (!array_key_exists($propertyPath, $classMetadata->fieldNames)) {
+                throw new \InvalidArgumentException($rootEntity . ' does not have property "' . $propertyPath . '"');
+            }
+
+            return new ResolvedProperty(
+                $this->getRootAlias() . '.' . $propertyPath,
+                $classMetadata->getReflectionProperty($propertyPath),
+                $classMetadata->getTypeOfField($propertyPath)
+            );
         }
 
-        $rootEntity = $this->getRootEntityNamespace();
         $currEntity = $rootEntity;
         // Start with the entity alias
         $joinTableName = $this->getRootAlias();
@@ -58,6 +67,8 @@ class ZanQueryBuilder extends QueryBuilder
                 // If this is the last property to resolve, return it
                 if (count($pathQueue) === 1) {
                     $resolvedProperty->setQueryAlias($joinAlias);
+                    $resolvedProperty->setFieldType($classMetadata->getTypeOfField($currProperty));
+                    $resolvedProperty->setReflectionProperty($classMetadata->getReflectionProperty($currProperty));
                     return $resolvedProperty;
                 }
             }
@@ -67,7 +78,8 @@ class ZanQueryBuilder extends QueryBuilder
                 if ($field) {
                     // The field is the final node in the tree, so the most recent joinAlias can be used to query on it
                     $resolvedProperty->setQueryAlias($joinAlias . '.' . $field['fieldName']);
-
+                    $resolvedProperty->setFieldType($classMetadata->getTypeOfField($currProperty));
+                    $resolvedProperty->setReflectionProperty($classMetadata->getReflectionProperty($currProperty));
                     return $resolvedProperty;
                 }
                 else {
