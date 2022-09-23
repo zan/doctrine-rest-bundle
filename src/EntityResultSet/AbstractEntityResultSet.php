@@ -378,21 +378,16 @@ abstract class AbstractEntityResultSet
 
     public function addOrderBy(string $property, string $direction = 'ASC')
     {
+        $resolved = $this->qb->resolveProperty($property);
+
         // Normalize property to something that can be sorted in DQL
-        $fieldName = null;
-        // A dot in the property means this is a nested assocation that needs to be resolved
-        if (str_contains($property, '.')) {
-            $fieldName = $this->qb->resolveProperty($property)->getQueryAlias();
-        }
-        // Otherwise, it's a simple field directly on the entity
-        else {
-            // The field name in the query needs to have the root alias prepended, eg e.status instead of just 'status'
-            $fieldName = $this->qb->getRootAlias() . '.' . $property;
+        $fieldName = $resolved->getQueryAlias();
+
+        // If this is a column that makes sense to "natural sort" then implement this by adding a length orderBy
+        if ($resolved->isEligibleForNaturalSort()) {
+            $this->orderBys[] = [ 'property' => 'LENGTH(' . $fieldName . ')', 'direction' => $direction ];
         }
 
-        // todo: useful exception if this can't be resolved
-
-        // todo: check for duplicates?
         $this->orderBys[] = [ 'property' => $fieldName, 'direction' => $direction ];
     }
 }
