@@ -67,7 +67,7 @@ class ResolvedProperty
         return $this->fieldType;
     }
 
-    public function setFieldType(string $fieldType): void
+    public function setFieldType(?string $fieldType): void
     {
         $this->fieldType = $fieldType;
     }
