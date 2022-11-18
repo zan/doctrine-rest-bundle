@@ -331,7 +331,7 @@ class EntityDataController extends AbstractController
         }
 
         $serializedData = null;
-        if (!$isBulkOperation) {
+        if ($isBulkOperation) {
             $serializedData = [];
             foreach ($updatedEntities as $updatedEntity) {
                 $serializedData[] = $serializer->serialize($updatedEntity, $responseFields);
