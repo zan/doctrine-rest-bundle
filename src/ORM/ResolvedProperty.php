@@ -2,6 +2,8 @@
 
 namespace Zan\DoctrineRestBundle\ORM;
 
+use Zan\DoctrineRestBundle\Annotation\Sorter;
+
 class ResolvedProperty
 {
     private ?string $queryAlias;
@@ -29,7 +31,15 @@ class ResolvedProperty
      */
     public function isEligibleForNaturalSort()
     {
-        return in_array($this->fieldType, ['text', 'string', 'ascii_string' ]);
+        if (!$this->reflectionProperty) throw new \LogicException('ResolvedProperty was not created with a reflectionProperty');
+
+        $sorterAttr = $this->reflectionProperty->getAttributes(Sorter::class);
+        if (!$sorterAttr) return false;
+
+        /** @var Sorter $sorter */
+        $sorter = $sorterAttr[0]->newInstance();
+
+        return $sorter->getStrategy() === Sorter::STRATEGY_NATURAL;
     }
 
     public function addJoinAlias(string $alias)
