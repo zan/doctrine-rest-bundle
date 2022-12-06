@@ -81,6 +81,7 @@ class PermissionsCalculatorFactory
 
         // Otherwise, build a generic calculator based off information in the annotations
         $calculator = new GenericPermissionsCalculator();
+        $calculator->setCreateAbilities($apiPermissionsDeclaration->getCreateAbilities());
         $calculator->setReadAbilities($apiPermissionsDeclaration->getReadAbilities());
         $calculator->setWriteAbilities($apiPermissionsDeclaration->getWriteAbilities());
         $calculator->setDeleteAbilities($apiPermissionsDeclaration->getDeleteAbilities());

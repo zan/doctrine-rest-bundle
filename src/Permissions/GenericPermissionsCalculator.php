@@ -10,6 +10,9 @@ class GenericPermissionsCalculator implements PermissionsCalculatorInterface
     private array $readAbilities = [];
 
     /** @var string[]  */
+    private array $createAbilities = [];
+
+    /** @var string[]  */
     private array $writeAbilities = [];
 
     /** @var string[]  */
@@ -26,8 +29,16 @@ class GenericPermissionsCalculator implements PermissionsCalculatorInterface
 
     public function canCreateEntity(string $entityClassName, ActorWithAbilitiesInterface $actor, array $rawData = []): bool
     {
-        // Allow if the user has write permissions
-        return $this->anyAbilityMatchesAnySpecification($actor->getAbilities(), $this->writeAbilities);
+        $createAbilities = $this->createAbilities;
+
+        // If create abilities are specified, use those
+        if ($createAbilities) {
+            return $this->anyAbilityMatchesAnySpecification($actor->getAbilities(), $createAbilities);
+        }
+        // Otherwise, fall back to whether $actor can write $entity
+        else {
+            return $this->anyAbilityMatchesAnySpecification($actor->getAbilities(), $this->writeAbilities);
+        }
     }
 
     public function canEditEntity(object $entity, ActorWithAbilitiesInterface $actor): bool
@@ -80,6 +91,11 @@ class GenericPermissionsCalculator implements PermissionsCalculatorInterface
         if ($ability === $specification) return true;
 
         return false;
+    }
+
+    public function setCreateAbilities(array $abilities)
+    {
+        $this->createAbilities = $abilities;
     }
 
     public function setReadAbilities(array $abilities)
