@@ -19,4 +19,6 @@ interface PermissionsCalculatorInterface
     public function canEditEntity(object $entity, ActorWithAbilitiesInterface $actor): bool;
 
     public function canEditEntityProperty(object $entity, string $property, ActorWithAbilitiesInterface $actor): bool;
+
+    public function canDeleteEntity(object $entity, ActorWithAbilitiesInterface $actor): bool;
 }
