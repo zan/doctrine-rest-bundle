@@ -12,6 +12,9 @@ class GenericPermissionsCalculator implements PermissionsCalculatorInterface
     /** @var string[]  */
     private array $writeAbilities = [];
 
+    /** @var string[]  */
+    private array $deleteAbilities = [];
+
     public function filterQueryBuilder(ZanQueryBuilder $qb, ActorWithAbilitiesInterface $actor): void
     {
         // If the actor has an ability that grants read access return without modifying the query builder
@@ -39,6 +42,19 @@ class GenericPermissionsCalculator implements PermissionsCalculatorInterface
         return $this->anyAbilityMatchesAnySpecification($actor->getAbilities(), $this->writeAbilities);
     }
 
+    public function canDeleteEntity(object $entity, ActorWithAbilitiesInterface $actor): bool
+    {
+        $deleteAbilities = $this->deleteAbilities;
+
+        // If delete abilities are specified, use those
+        if ($deleteAbilities) {
+            return $this->anyAbilityMatchesAnySpecification($actor->getAbilities(), $this->deleteAbilities);
+        }
+        // Otherwise, fall back to whether $actor can edit $entity
+        else {
+            return $this->canEditEntity($entity, $actor);
+        }
+    }
 
     protected function anyAbilityMatchesAnySpecification($abilities, $specifications)
     {
@@ -74,5 +90,10 @@ class GenericPermissionsCalculator implements PermissionsCalculatorInterface
     public function setWriteAbilities(array $abilities)
     {
         $this->writeAbilities = $abilities;
+    }
+
+    public function setDeleteAbilities(array $abilities)
+    {
+        $this->deleteAbilities = $abilities;
     }
 }

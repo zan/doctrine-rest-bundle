@@ -83,6 +83,7 @@ class PermissionsCalculatorFactory
         $calculator = new GenericPermissionsCalculator();
         $calculator->setReadAbilities($apiPermissionsDeclaration->getReadAbilities());
         $calculator->setWriteAbilities($apiPermissionsDeclaration->getWriteAbilities());
+        $calculator->setDeleteAbilities($apiPermissionsDeclaration->getDeleteAbilities());
 
         $this->cache[$entityClassName] = $calculator;
         return $calculator;
