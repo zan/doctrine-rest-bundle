@@ -523,7 +523,6 @@ class EntityDataController extends AbstractController
         $em->remove($entity);
         $em->flush();
 
-        // todo: permission checks
         return new JsonResponse(['success' => true]);
     }
 
