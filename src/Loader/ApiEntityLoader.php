@@ -80,6 +80,8 @@ class ApiEntityLoader
      * todo: docs and typehinting
      *
      * todo: document that this requires constructor arguments to be named in a certain way
+     *
+     * todo: permission checks should be added here similar to update() (they can then be removed from EntityDataController)
      */
     public function create($entityClassName, $rawInput)
     {
