@@ -389,6 +389,7 @@ class EntityDataController extends AbstractController
         $user = $this->getUser();
         $middlewares = $middlewareRegistry->getMiddlewaresForEntity($entityClassName);
         $isBulkOperation = false;
+        $enableDebugging = $request->get('zan_enableDebugging', false);
 
         $responseFields = [];
         if ($request->query->has('responseFields')) {
@@ -406,11 +407,14 @@ class EntityDataController extends AbstractController
 
         // Deny access unless there's a calculator that specifically permits access
         if (!$permissionsCalculator || !$permissionsCalculator->canCreateEntity($entityClassName, $user, $decodedBody)) {
-            $prnPermissionsCalculator = '<NULL>';
-            if ($permissionsCalculator) $prnPermissionsCalculator = get_class($permissionsCalculator);
-            ZanDebug::dump("Using permissions calculator class: " . $prnPermissionsCalculator);
-            ZanDebug::dump("Entity class name: " . $entityClassName);
-            ZanDebug::dump("User: " . $user->getUsername());
+            if ($enableDebugging) {
+                $prnPermissionsCalculator = '<NULL>';
+                if ($permissionsCalculator) $prnPermissionsCalculator = get_class($permissionsCalculator);
+                ZanDebug::dump("Using permissions calculator class: " . $prnPermissionsCalculator);
+                ZanDebug::dump("Entity class name: " . $entityClassName);
+                ZanDebug::dump("User: " . $user->getUsername());
+            }
+
             // todo: better exception here
             throw new \InvalidArgumentException('User does not have permissions to create entity');
         }
@@ -491,6 +495,7 @@ class EntityDataController extends AbstractController
     ) {
         $entityClassName = $this->unescapeEntityId($entityId);
         $user = $this->getUser();
+        $enableDebugging = $request->get('zan_enableDebugging', false);
 
         $permissionsCalculator = $permissionsCalculatorFactory->getPermissionsCalculator($entityClassName);
         if (!$permissionsCalculator) {
@@ -511,10 +516,12 @@ class EntityDataController extends AbstractController
         $entity = $resultSet->mustGetSingleResult();
 
         if (!$permissionsCalculator->canDeleteEntity($entity, $user)) {
-            $prnPermissionsCalculator = get_class($permissionsCalculator);
-            ZanDebug::dump("Using permissions calculator class: " . $prnPermissionsCalculator);
-            ZanDebug::dump("Entity class name: " . $entityClassName);
-            ZanDebug::dump("User: " . $user->getUsername());
+            if ($enableDebugging) {
+                $prnPermissionsCalculator = get_class($permissionsCalculator);
+                ZanDebug::dump("Using permissions calculator class: " . $prnPermissionsCalculator);
+                ZanDebug::dump("Entity class name: " . $entityClassName);
+                ZanDebug::dump("User: " . $user->getUsername());
+            }
 
             // todo: better exception here
             throw new \InvalidArgumentException('User does not have permissions to delete entity');
