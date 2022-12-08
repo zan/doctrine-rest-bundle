@@ -25,6 +25,7 @@ use Zan\DoctrineRestBundle\Exception\ApiException;
 use Zan\DoctrineRestBundle\Loader\ApiEntityLoader;
 use Zan\DoctrineRestBundle\Permissions\EntityPropertyEditabilityMap;
 use Zan\DoctrineRestBundle\Permissions\PermissionsCalculatorFactory;
+use Zan\DoctrineRestBundle\Permissions\ResultSetDeletabilityMap;
 use Zan\DoctrineRestBundle\Permissions\ResultSetEditabilityMap;
 use Doctrine\Common\Annotations\Reader;
 use Doctrine\ORM\EntityManager;
@@ -119,9 +120,17 @@ class EntityDataController extends AbstractController
 
         $editabilityMap = null;
         $includeEditability = false;
+        $includeDeletability = false;
         if (in_array('editability', $includeMetadata) || in_array('permissions', $includeMetadata)) {
             $includeEditability = true;
             $editabilityMap = new ResultSetEditabilityMap(
+                $permissionsCalculator,
+                $user
+            );
+        }
+        if (in_array('deletability', $includeMetadata) || in_array('permissions', $includeMetadata)) {
+            $includeDeletability = true;
+            $deletabilityMap = new ResultSetDeletabilityMap(
                 $permissionsCalculator,
                 $user
             );
@@ -135,13 +144,15 @@ class EntityDataController extends AbstractController
         foreach ($pagedResults as $entity) {
             $entities[] = $entitySerializer->serialize($entity, $responseFields);
 
-            if ($includeEditability) {
-                $editabilityMap->processEntity($entity);
-            }
+            if ($includeEditability) $editabilityMap->processEntity($entity);
+            if ($includeDeletability) $deletabilityMap->processEntity($entity);
         }
 
         if ($includeEditability) {
             $metadata['editability'] = $editabilityMap->getCompressedMap();
+        }
+        if ($includeDeletability) {
+            $metadata['deletability'] = $deletabilityMap->getCompressedMap();
         }
 
         if (in_array('permissions', $includeMetadata)) {
@@ -210,6 +221,7 @@ class EntityDataController extends AbstractController
         $editabilityMap = null;
         $includeEditability = false;
         $includeFieldEditability = false;
+        $includeDeletability = false;
         if (in_array('editability', $includeMetadata)) {
             $includeEditability = true;
             $editabilityMap = new ResultSetEditabilityMap(
@@ -222,6 +234,13 @@ class EntityDataController extends AbstractController
             $propertyEditabilityMap = new EntityPropertyEditabilityMap(
                 $em,
                 $annotationReader,
+                $permissionsCalculator,
+                $user
+            );
+        }
+        if (in_array('deletability', $includeMetadata)) {
+            $includeDeletability = true;
+            $deletabilityMap = new ResultSetDeletabilityMap(
                 $permissionsCalculator,
                 $user
             );
@@ -248,6 +267,10 @@ class EntityDataController extends AbstractController
         if ($includeFieldEditability) {
             $propertyEditabilityMap->processEntity($entity);
             $metadata['fieldEditability'] = $propertyEditabilityMap->getCompressedMap();
+        }
+        if ($includeDeletability) {
+            $deletabilityMap->processEntity($entity);
+            $metadata['deletability'] = $deletabilityMap->getCompressedMap();
         }
 
         $serializer = new MinimalEntitySerializer(
