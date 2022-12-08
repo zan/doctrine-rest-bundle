@@ -5,8 +5,7 @@ namespace Zan\DoctrineRestBundle\Permissions;
 
 
 /**
- * todo: permissions calculator should be a service
- * todo: ^^ should be able to specify what parameters it needs
+ * Represents a map of which records in a result set are editable and which are read-only
  */
 class ResultSetEditabilityMap
 {
@@ -22,6 +21,7 @@ class ResultSetEditabilityMap
     /** @var mixed */
     protected $actingUser;
 
+    // todo: $actingUser should allow nulls or be the first argument
     public function __construct(PermissionsCalculatorInterface $permissionsCalculator = null, $actingUser)
     {
         $this->permissionsCalculator = $permissionsCalculator;
