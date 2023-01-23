@@ -18,11 +18,12 @@ class ResultSetFilter
     /**
      * If the value can be parsed as a date this property will hold a \DateTimeImmutable
      */
-    private ?\DateTimeImmutable $valueAsDate;
+    private ?\DateTimeImmutable $valueAsDate = null;
 
     public static function buildFromArray($raw): ResultSetFilter
     {
-        $f = new ResultSetFilter($raw['property'], $raw['value'] ?? '');
+        $value = array_key_exists('value', $raw) ? $raw['value'] : null;
+        $f = new ResultSetFilter($raw['property'], $value);
 
         if (array_key_exists('operator', $raw)) $f->setOperator($raw['operator']);
 
@@ -35,9 +36,8 @@ class ResultSetFilter
 
         // If it looks like a javascript date, convert it to one that SQL will understand
         // todo: should be more reliable and check whether the property being queried is a \DateTimeInterface?
-        // todo: convert date to a \DateTimeImmutable
         if (is_string($value)) {
-            $parsesAsDate = \DateTimeImmutable::createFromFormat(DATE_RFC3339_EXTENDED, $value);
+            $parsesAsDate = \DateTimeImmutable::createFromFormat(DATE_ATOM, $value);
             if ($parsesAsDate !== false) {
                 $value = $parsesAsDate->format('Y-m-d H:i:s');
                 $this->valueAsDate = $parsesAsDate;
@@ -118,6 +118,10 @@ class ResultSetFilter
             $qb->andWhere("$fieldName LIKE :$parameterName");
             $qb->setParameter($parameterName, ZanSql::escapeLikeParameter($this->value));
         }
+        if ('notlike' === $operator) {
+            $qb->andWhere("$fieldName NOT LIKE :$parameterName");
+            $qb->setParameter($parameterName, ZanSql::escapeLikeParameter($this->value));
+        }
         if ('empty' === $operator) {
             $qb->andWhere("$fieldName = '' OR $fieldName IS NULL");
         }
@@ -146,7 +150,7 @@ class ResultSetFilter
 
     protected function mustBeSupportedOperator($operator)
     {
-        $supported = ['=', '==', '!=', '>', '>=', '<', '<=', 'in', 'notin', 'like', 'empty', 'notempty', 'nempty'];
+        $supported = ['=', '==', '!=', '>', '>=', '<', '<=', 'in', 'notin', 'like', 'notlike', 'empty', 'notempty', 'nempty'];
 
         // Date filters so that users can choose a day and see all results on that day
         $supported[] = 'onday';
