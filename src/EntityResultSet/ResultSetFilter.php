@@ -2,6 +2,7 @@
 
 namespace Zan\DoctrineRestBundle\EntityResultSet;
 
+use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
 use Zan\CommonBundle\Util\ZanSql;
 use Zan\CommonBundle\Util\ZanString;
@@ -49,7 +50,10 @@ class ResultSetFilter
         $this->operator = $operator;
     }
 
-    public function applyToQueryBuilder(ZanQueryBuilder $qb)
+    /**
+     * @param Expr\Composite|Expr\Andx|Expr\Orx $expr
+     */
+    public function applyToExpr(Expr\Composite $expr, ZanQueryBuilder $qb)
     {
         $fieldName = null;
         // A dot in the property means this is a nested association that needs to be resolved
@@ -61,7 +65,10 @@ class ResultSetFilter
             // The field name in the query needs to have the root alias prepended, eg e.status instead of just 'status'
             $fieldName = $qb->getRootAlias() . '.' . $this->property;
         }
-        
+
+        // Field name should never have anything besides a-z,0-9,. in it
+        $fieldName = preg_replace( "/[^a-z0-9.]/i", '', $fieldName);
+
         $parameterName = $qb->generateUniqueParameterName($fieldName);
         $operator = $this->operator;
 
@@ -73,60 +80,60 @@ class ResultSetFilter
         if ('=' === $operator || '==' === $operator) {
             // Special case for null
             if (null === $this->value) {
-                $qb->andWhere("$fieldName IS NULL");
+                $expr->addMultiple("$fieldName IS NULL");
             }
             else {
-                $qb->andWhere("$fieldName = :$parameterName");
+                $expr->addMultiple("$fieldName = :$parameterName");
                 $qb->setParameter($parameterName, $this->value);
             }
         }
         if ('!=' === $operator) {
             // Special case for null
             if (null === $this->value) {
-                $qb->andWhere("$fieldName IS NOT NULL");
+                $expr->addMultiple("$fieldName IS NOT NULL");
             }
             else {
-                $qb->andWhere("$fieldName != :$parameterName");
+                $expr->addMultiple("$fieldName != :$parameterName");
                 $qb->setParameter($parameterName, $this->value);
             }
         }
         if ('>' === $operator) {
-            $qb->andWhere("$fieldName > :$parameterName");
+            $expr->addMultiple("$fieldName > :$parameterName");
             $qb->setParameter($parameterName, $this->value);
         }
         if ('>=' === $operator) {
-            $qb->andWhere("$fieldName >= :$parameterName");
+            $expr->addMultiple("$fieldName >= :$parameterName");
             $qb->setParameter($parameterName, $this->value);
         }
         if ('<' === $operator) {
-            $qb->andWhere("$fieldName < :$parameterName");
+            $expr->addMultiple("$fieldName < :$parameterName");
             $qb->setParameter($parameterName, $this->value);
         }
         if ('<=' === $operator) {
-            $qb->andWhere("$fieldName <= :$parameterName");
+            $expr->addMultiple("$fieldName <= :$parameterName");
             $qb->setParameter($parameterName, $this->value);
         }
         if ('in' === $operator) {
-            $qb->andWhere("$fieldName IN (:$parameterName)");
+            $expr->addMultiple("$fieldName IN (:$parameterName)");
             $qb->setParameter($parameterName, $this->value);
         }
         if ('notin' === $operator) {
-            $qb->andWhere("$fieldName NOT IN (:$parameterName)");
+            $expr->addMultiple("$fieldName NOT IN (:$parameterName)");
             $qb->setParameter($parameterName, $this->value);
         }
         if ('like' === $operator) {
-            $qb->andWhere("$fieldName LIKE :$parameterName");
+            $expr->addMultiple("$fieldName LIKE :$parameterName");
             $qb->setParameter($parameterName, ZanSql::escapeLikeParameter($this->value));
         }
         if ('notlike' === $operator) {
-            $qb->andWhere("$fieldName NOT LIKE :$parameterName");
+            $expr->addMultiple("$fieldName NOT LIKE :$parameterName");
             $qb->setParameter($parameterName, ZanSql::escapeLikeParameter($this->value));
         }
         if ('empty' === $operator) {
-            $qb->andWhere("$fieldName = '' OR $fieldName IS NULL");
+            $expr->addMultiple("$fieldName = '' OR $fieldName IS NULL");
         }
         if ('notempty' === $operator || 'nempty' === $operator) {
-            $qb->andWhere("$fieldName != '' AND $fieldName IS NOT NULL");
+            $expr->addMultiple("$fieldName != '' AND $fieldName IS NOT NULL");
         }
 
         // Date-specific filters
@@ -142,7 +149,7 @@ class ResultSetFilter
 
             $sqlOperator = ($operator === 'onday') ? 'BETWEEN' : 'NOT BETWEEN';
 
-            $qb->andWhere("$fieldName $sqlOperator :$startParamName AND :$endParamName");
+            $expr->addMultiple("$fieldName $sqlOperator :$startParamName AND :$endParamName");
             $qb->setParameter($startParamName, $startAt);
             $qb->setParameter($endParamName, $endAt);
         }
