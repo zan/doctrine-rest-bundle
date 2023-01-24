@@ -38,7 +38,12 @@ class ResultSetFilter
         // If it looks like a javascript date, convert it to one that SQL will understand
         // todo: should be more reliable and check whether the property being queried is a \DateTimeInterface?
         if (is_string($value)) {
+            // Try ISO 8601
             $parsesAsDate = \DateTimeImmutable::createFromFormat(DATE_ATOM, $value);
+            // Also support DATE_RFC3339_EXTENDED (the default used by Ext, includes milliseconds)
+            if ($parsesAsDate === false) {
+                $parsesAsDate = \DateTimeImmutable::createFromFormat(DATE_RFC3339_EXTENDED, $value);
+            }
             if ($parsesAsDate !== false) {
                 $value = $parsesAsDate->format('Y-m-d H:i:s');
                 $this->valueAsDate = $parsesAsDate;
