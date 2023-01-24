@@ -84,15 +84,11 @@ class EntityDataController extends AbstractController
             $searchFields = ZanArray::createFromString($request->query->get('queryFields'));
             if (!$searchFields) throw new ApiException('"queryFields" must be specified when "query" parameter is present');
 
-            // todo: multiple search fields require "OR" support in the filter collection
-            if (count($searchFields) > 1) {
-                throw new ApiException('Unimplemented: only one queryField is supported');
-            }
-
+            $searchFilters = [];
             foreach ($searchFields as $field) {
-                $filter = ResultSetFilter::buildFromArray(['property' => $field, 'operator' => 'like', 'value' => $searchString]);
-                $filterCollection->addAndFilter($filter);
+                $searchFilters[] = ResultSetFilter::buildFromArray(['property' => $field, 'operator' => 'like', 'value' => $searchString]);
             }
+            $filterCollection->addOrFilters($searchFilters);
         }
 
         $resultSet = new GenericEntityResultSet($entityClassName, $em, $annotationReader);
