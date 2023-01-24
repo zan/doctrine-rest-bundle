@@ -542,8 +542,10 @@ class EntityDataController extends AbstractController
                 ZanDebug::dump("User: " . $user->getUsername());
             }
 
-            // todo: better exception here
-            throw new \InvalidArgumentException('User does not have permissions to delete entity');
+            return new JsonResponse([
+                'success' => false,
+                'code' => Error::INSUFFICIENT_PERMISSIONS,
+            ], 403);
         }
 
         $em->remove($entity);
