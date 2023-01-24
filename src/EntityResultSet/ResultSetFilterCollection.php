@@ -7,7 +7,15 @@ use Doctrine\ORM\QueryBuilder;
 
 class ResultSetFilterCollection
 {
-    private $items;
+    /**
+     * Tracks ResultSetFilter objects in the collection. By default, filters are ANDed together
+     */
+    private ArrayCollection $items;
+
+    /**
+     * Items in the collection that should be in an "OR" group
+     */
+    private ArrayCollection $orItems;
 
     public static function buildFromArray($raw): ResultSetFilterCollection
     {
@@ -21,11 +29,22 @@ class ResultSetFilterCollection
     public function __construct()
     {
         $this->items = new ArrayCollection();
+        $this->orItems = new ArrayCollection();
     }
 
     public function addAndFilter(ResultSetFilter $filter)
     {
         $this->items->add($filter);
+    }
+
+    /**
+     * Adds one or more filters that will be ORed with each other and applied after the default ANDed queries
+     *
+     * @param ResultSetFilter[] $filters
+     */
+    public function addOrFilters(array $filters)
+    {
+        $this->orItems->add($filters);
     }
 
     public function addAndFiltersFromArray(array $raw)
@@ -37,8 +56,28 @@ class ResultSetFilterCollection
     
     public function applyToQueryBuilder(QueryBuilder $qb)
     {
+        // Apply all standard "and" items
         foreach ($this->getItems() as $filter) {
-            $filter->applyToQueryBuilder($qb);
+            $andExpr = $qb->expr()->andX();
+
+            $filter->applyToExpr($andExpr, $qb);
+
+            $qb->andWhere($andExpr);
+        }
+
+        // Add in OR groups
+        foreach ($this->orItems as $orItemGroup) {
+            $ors = $qb->expr()->orX();
+
+            foreach ($orItemGroup as $itemFilter) {
+                $orExpr = $qb->expr()->orX();
+
+                $itemFilter->applyToExpr($orExpr, $qb);
+
+                $ors->add($orExpr);
+            }
+
+            $qb->andWhere($ors);
         }
     }
 
