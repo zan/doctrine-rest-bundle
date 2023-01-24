@@ -66,8 +66,8 @@ class ResultSetFilter
             $fieldName = $qb->getRootAlias() . '.' . $this->property;
         }
 
-        // Field name should never have anything besides a-z,0-9,. in it
-        $fieldName = preg_replace( "/[^a-z0-9.]/i", '', $fieldName);
+        // Field name should never have anything besides a-z,0-9,.,_ in it
+        $fieldName = preg_replace( "/[^a-z0-9._]/i", '', $fieldName);
 
         $parameterName = $qb->generateUniqueParameterName($fieldName);
         $operator = $this->operator;
