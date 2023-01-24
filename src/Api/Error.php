@@ -13,4 +13,7 @@ class Error
 
     // The entity version in the database is newer than the entity version sent by the client
     public const CONFLICTING_EDITS          = 'Zan.Drest.ConflictingEdits';
+
+    // Insufficient permissions to perform the given action
+    public const INSUFFICIENT_PERMISSIONS    = 'Zan.Drest.InsufficientPermissions';
 }
