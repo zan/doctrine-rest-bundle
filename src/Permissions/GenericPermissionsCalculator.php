@@ -2,114 +2,115 @@
 
 namespace Zan\DoctrineRestBundle\Permissions;
 
+use Symfony\Component\Security\Core\User\UserInterface;
 use Zan\DoctrineRestBundle\ORM\ZanQueryBuilder;
 
 class GenericPermissionsCalculator implements PermissionsCalculatorInterface
 {
     /** @var string[]  */
-    private array $readAbilities = [];
+    private array $readRoles = [];
 
     /** @var string[]  */
-    private array $createAbilities = [];
+    private array $createRoles = [];
 
     /** @var string[]  */
-    private array $writeAbilities = [];
+    private array $writeRoles = [];
 
     /** @var string[]  */
-    private array $deleteAbilities = [];
+    private array $deleteRoles = [];
 
-    public function filterQueryBuilder(ZanQueryBuilder $qb, ActorWithAbilitiesInterface $actor): void
+    public function filterQueryBuilder(ZanQueryBuilder $qb, ?UserInterface $user): void
     {
-        // If the actor has an ability that grants read access return without modifying the query builder
-        if ($this->anyAbilityMatchesAnySpecification($actor->getAbilities(), $this->readAbilities)) return;
+        // If the user has a role that grants read access return without modifying the query builder
+        if ($this->anyRoleMatchesAnySpecification($user->getRoles(), $this->readRoles)) return;
 
         // Otherwise, deny all results by default
         $qb->andWhere('0 = 1');
     }
 
-    public function canCreateEntity(string $entityClassName, ActorWithAbilitiesInterface $actor, array $rawData = []): bool
+    public function canCreateEntity(string $entityClassName, ?UserInterface $user, array $rawData = []): bool
     {
-        $createAbilities = $this->createAbilities;
+        $createRoles = $this->createRoles;
 
-        // If create abilities are specified, use those
-        if ($createAbilities) {
-            return $this->anyAbilityMatchesAnySpecification($actor->getAbilities(), $createAbilities);
+        // If create roles are specified, use those
+        if ($createRoles) {
+            return $this->anyRoleMatchesAnySpecification($user->getRoles(), $createRoles);
         }
-        // Otherwise, fall back to whether $actor can write $entity
+        // Otherwise, fall back to whether $user can write $entity
         else {
-            return $this->anyAbilityMatchesAnySpecification($actor->getAbilities(), $this->writeAbilities);
+            return $this->anyRoleMatchesAnySpecification($user->getRoles(), $this->writeRoles);
         }
     }
 
-    public function canEditEntity(object $entity, ActorWithAbilitiesInterface $actor): bool
+    public function canEditEntity(object $entity, ?UserInterface $user): bool
     {
         // Allow if the user has write permissions
-        return $this->anyAbilityMatchesAnySpecification($actor->getAbilities(), $this->writeAbilities);
+        return $this->anyRoleMatchesAnySpecification($user->getRoles(), $this->writeRoles);
     }
 
-    public function canEditEntityProperty(object $entity, string $property, ActorWithAbilitiesInterface $actor): bool
+    public function canEditEntityProperty(object $entity, string $property, ?UserInterface $user): bool
     {
         // Allow if the user has write permissions
-        return $this->anyAbilityMatchesAnySpecification($actor->getAbilities(), $this->writeAbilities);
+        return $this->anyRoleMatchesAnySpecification($user->getRoles(), $this->writeRoles);
     }
 
-    public function canDeleteEntity(object $entity, ActorWithAbilitiesInterface $actor): bool
+    public function canDeleteEntity(object $entity, ?UserInterface $user): bool
     {
-        $deleteAbilities = $this->deleteAbilities;
+        $deleteRoles = $this->deleteRoles;
 
-        // If delete abilities are specified, use those
-        if ($deleteAbilities) {
-            return $this->anyAbilityMatchesAnySpecification($actor->getAbilities(), $this->deleteAbilities);
+        // If delete roles are specified, use those
+        if ($deleteRoles) {
+            return $this->anyRoleMatchesAnySpecification($user->getRoles(), $this->deleteRoles);
         }
-        // Otherwise, fall back to whether $actor can edit $entity
+        // Otherwise, fall back to whether $user can edit $entity
         else {
-            return $this->canEditEntity($entity, $actor);
+            return $this->canEditEntity($entity, $user);
         }
     }
 
-    protected function anyAbilityMatchesAnySpecification($abilities, $specifications)
+    protected function anyRoleMatchesAnySpecification($roles, $specifications)
     {
         // First, check if the specifications allow anyone to read the entity
         foreach ($specifications as $specification) {
             if ('*' === $specification) return true;
         }
 
-        foreach ($abilities as $ability) {
+        foreach ($roles as $role) {
             foreach ($specifications as $specification) {
-                if ($this->abilityMatchesSpecification($ability, $specification)) return true;
+                if ($this->roleMatchesSpecification($role, $specification)) return true;
             }
         }
 
         return false;
     }
 
-    protected function abilityMatchesSpecification($ability, $specification)
+    protected function roleMatchesSpecification($role, $specification)
     {
-        // '*' means match all abilities
+        // '*' means match all roles
         if ('*' === $specification) return true;
 
-        if ($ability === $specification) return true;
+        if ($role === $specification) return true;
 
         return false;
     }
 
-    public function setCreateAbilities(array $abilities)
+    public function setCreateRoles(array $roles)
     {
-        $this->createAbilities = $abilities;
+        $this->createRoles = $roles;
     }
 
-    public function setReadAbilities(array $abilities)
+    public function setReadRoles(array $roles)
     {
-        $this->readAbilities = $abilities;
+        $this->readRoles = $roles;
     }
 
-    public function setWriteAbilities(array $abilities)
+    public function setWriteRoles(array $roles)
     {
-        $this->writeAbilities = $abilities;
+        $this->writeRoles = $roles;
     }
 
-    public function setDeleteAbilities(array $abilities)
+    public function setDeleteRoles(array $roles)
     {
-        $this->deleteAbilities = $abilities;
+        $this->deleteRoles = $roles;
     }
 }
