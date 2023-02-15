@@ -4,11 +4,12 @@
 namespace Zan\DoctrineRestBundle\Permissions;
 
 
-use Doctrine\ORM\QueryBuilder;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Zan\DoctrineRestBundle\ORM\ZanQueryBuilder;
 
 class AlwaysAllowsPermissionsCalculator implements PermissionsCalculatorInterface
 {
-    public function canCreateEntity($entityClassName, $actingUser): bool
+    public function canCreateEntity($entityClassName, $actingUser, $rawData = []): bool
     {
         return true;
     }
@@ -23,9 +24,13 @@ class AlwaysAllowsPermissionsCalculator implements PermissionsCalculatorInterfac
         return true;
     }
 
-    public function getViewExpr(QueryBuilder $qb, $actingUser)
+    public function filterQueryBuilder(ZanQueryBuilder $qb, $actingUser): void
     {
-        return $qb->expr()->eq(1, 1);
+        $qb->expr()->eq(1, 1);
     }
 
+    public function canDeleteEntity(object $entity, ?UserInterface $user): bool
+    {
+        return true;
+    }
 }
