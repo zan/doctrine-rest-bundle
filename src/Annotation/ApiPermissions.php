@@ -42,22 +42,22 @@ class ApiPermissions implements Annotation
         return $this->permissionsClass;
     }
 
-    public function getCreateAbilities()
+    public function getCreateSpecification()
     {
         return $this->createSpecification;
     }
 
-    public function getReadAbilities()
+    public function getReadSpecification()
     {
         return $this->readSpecification;
     }
 
-    public function getWriteAbilities()
+    public function getWriteSpecification()
     {
         return $this->writeSpecification;
     }
 
-    public function getDeleteAbilities()
+    public function getDeleteSpecification()
     {
         return $this->deleteSpecification;
     }
