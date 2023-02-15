@@ -2,7 +2,7 @@
 
 namespace Zan\DoctrineRestBundle\EntityMiddleware;
 
-use Zan\DoctrineRestBundle\Permissions\ActorWithAbilitiesInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 class EntityApiMiddlewareEvent
 {
@@ -17,13 +17,13 @@ class EntityApiMiddlewareEvent
     private $rawData;
 
     /**
-     * @var ActorWithAbilitiesInterface The user making with the API request
+     * The user making with the API request
      */
-    private $actor;
+    private ?UserInterface $user;
 
-    public function __construct(ActorWithAbilitiesInterface $actor, $rawData, $entity)
+    public function __construct(?UserInterface $user, $rawData, $entity)
     {
-        $this->actor = $actor;
+        $this->user = $user;
         $this->rawData = $rawData;
         $this->entity = $entity;
     }
@@ -48,13 +48,13 @@ class EntityApiMiddlewareEvent
         $this->rawData = $rawData;
     }
 
-    public function getActor(): ActorWithAbilitiesInterface
+    public function getUser(): ?UserInterface
     {
-        return $this->actor;
+        return $this->user;
     }
 
-    public function setActor(ActorWithAbilitiesInterface $actor): void
+    public function setUser(?UserInterface $user): void
     {
-        $this->actor = $actor;
+        $this->user = $user;
     }
 }
