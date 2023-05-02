@@ -18,6 +18,19 @@ use Zan\DoctrineRestBundle\Entity\GeneratedPublicIdStateEntry;
 interface GeneratedPublicIdInterface
 {
     /**
+     * Returns a string that uniquely identifies the type of entity that the public ID
+     * is being generated for.
+     *
+     * In many cases this can be the class namespace, but for certain dynamic entities
+     * this may need to return something more complicated.
+     *
+     * Example implementation:
+     *
+     *     return get_class($this);
+     */
+    public function getPublicIdStateKey(): string;
+
+    /**
      * Returns the current publicId for this entity
      *
      * NOTE: Automatic publicId generation via GeneratedPublicIdListener will only happen if this returns null initially

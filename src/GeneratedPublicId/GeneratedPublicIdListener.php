@@ -18,10 +18,10 @@ class GeneratedPublicIdListener
 
         // Load the state for this entity (or create a new state entry)
         $publicIdStateEntry = $em->getRepository(GeneratedPublicIdStateEntry::class)
-            ->findOneBy(['entityNamespace' => get_class($entity)]);
+            ->findOneByEntityKey($entity->getPublicIdStateKey());
 
         if (!$publicIdStateEntry) {
-            $publicIdStateEntry = new GeneratedPublicIdStateEntry(get_class($entity));
+            $publicIdStateEntry = new GeneratedPublicIdStateEntry(get_class($entity), $entity->getPublicIdStateKey());
             $em->persist($publicIdStateEntry);
         }
 
