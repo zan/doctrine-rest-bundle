@@ -425,7 +425,7 @@ class EntityDataController extends AbstractController
         );
 
         // Deny access unless there's a calculator that specifically permits access
-        if (!$permissionsCalculator || !$permissionsCalculator->canCreateEntity($entityClassName, $user, $decodedBody)) {
+        if (!$permissionsCalculator) {
             if ($enableDebugging) {
                 $prnPermissionsCalculator = '<NULL>';
                 if ($permissionsCalculator) $prnPermissionsCalculator = get_class($permissionsCalculator);
@@ -434,8 +434,7 @@ class EntityDataController extends AbstractController
                 ZanDebug::dump("User: " . $user->getUsername());
             }
 
-            // todo: better exception here
-            throw new \InvalidArgumentException('User does not have permissions to create entity');
+            throw new ApiException('This entity is not available for API access', Error::NO_ENTITY_PERMISSIONS);
         }
 
         $newEntitiesRaw = [];
@@ -455,6 +454,20 @@ class EntityDataController extends AbstractController
 
         $newEntities = [];
         foreach ($newEntitiesRaw as $rawData) {
+            // Check create permissions
+            if (!$permissionsCalculator->canCreateEntity($entityClassName, $user, $rawData)) {
+                if ($enableDebugging) {
+                    ZanDebug::dump("Not creating entity, permission denied");
+                }
+
+                // Return immediately to avoid partial bulk creates
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Insufficient permissions to create one or more entities',
+                    'code' => Error::INSUFFICIENT_PERMISSIONS,
+                ], 403);
+            }
+
             $newEntity = $entityLoader->create($entityClassName, $rawData);
 
             $middlewareArguments = new EntityApiMiddlewareEvent($user, $rawData, $newEntity);
