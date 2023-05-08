@@ -209,6 +209,8 @@ class ApiEntityLoader
             // Multi-value association and $rawValue is an array, eg. OneToMany or ManyToMany
             if ($propertyMetadata->isToManyAssociation()) {
                 $resolvedEntities = [];
+                // Interpret an emptyish $rawValue as an empty array
+                if (!$rawValue) $rawValue = [];
                 foreach ($rawValue as $entityIdOrPropertyValues) {
                     $entityId = null;
                     // Check for a complex array representing properties
