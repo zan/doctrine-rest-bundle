@@ -45,8 +45,11 @@ class ResultSetFilter
                 $parsesAsDate = \DateTimeImmutable::createFromFormat(DATE_RFC3339_EXTENDED, $value);
             }
             if ($parsesAsDate !== false) {
-                $value = $parsesAsDate->format('Y-m-d H:i:s');
+                // Ensure the date is using the server's timezone so format() conversion below works as expected
+                $localDate = $parsesAsDate->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+                
                 $this->valueAsDate = $parsesAsDate;
+                $value = $localDate->format('Y-m-d H:i:s');
             }
         }
 
