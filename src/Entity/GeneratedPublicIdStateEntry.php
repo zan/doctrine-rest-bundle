@@ -22,7 +22,7 @@ class GeneratedPublicIdStateEntry
     /**
      * The namespace of the entity implementing GeneratedPublicIdInterface
      *
-     * @ORM\Column(type="string", length=255, nullable=false, unique=true)
+     * @ORM\Column(type="string", length=255, nullable=false, unique=false)
      */
     private string $entityNamespace;
 
