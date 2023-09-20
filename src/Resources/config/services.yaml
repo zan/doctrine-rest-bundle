@@ -7,17 +7,22 @@ services:
     resource: '../../Controller'
     tags: ['controller.service_arguments']
 
-  Zan\DoctrineRestBundle\Loader\ApiEntityLoader: ~
+  Zan\DoctrineRestBundle\Loader\ApiEntityLoader:
+    public: true
 
-  Zan\DoctrineRestBundle\EntitySerializer\MinimalEntitySerializer: ~
+  Zan\DoctrineRestBundle\EntitySerializer\MinimalEntitySerializer:
+    public: true
 
   Zan\DoctrineRestBundle\Permissions\PermissionsCalculatorRegistry:
-      arguments:
-          - !tagged_iterator zan.permissions_calculator
+    public: true
+    arguments:
+      - !tagged_iterator zan.permissions_calculator
 
-  Zan\DoctrineRestBundle\Permissions\PermissionsCalculatorFactory: ~
+  Zan\DoctrineRestBundle\Permissions\PermissionsCalculatorFactory:
+    public: true
 
   Zan\DoctrineRestBundle\EntityMiddleware\EntityMiddlewareRegistry:
+    public: true
     arguments:
       - !tagged_iterator zan.drest.entity_middleware
       - '@annotation_reader'
@@ -26,7 +31,5 @@ services:
     tags:
       - { name: kernel.event_listener, event: kernel.exception, method: onKernelException }
 
-  #
-  # Public services
   Zan\DoctrineRestBundle\EntityResultSet\EntityResultSetFactory:
     public: true
