@@ -19,6 +19,7 @@ use Zan\DoctrineRestBundle\Permissions\PermissionsCalculatorInterface;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\QueryBuilder;
+use Zan\DoctrineRestBundle\Util\DataTypeUtils;
 
 abstract class AbstractEntityResultSet
 {
@@ -196,12 +197,21 @@ abstract class AbstractEntityResultSet
             }
 
             if ($hasDoctrineId || $hasZanPublicId) {
-                $identifiersExpr->add($expr->eq('e.' . $property->name, ':identifier'));
+                // MySQL has very weird string conversion rules, so ensure parameters are matched to the
+                // appropriate type to prevent unexpected casting
+                // Eg. By default, "1asdf" will be converted to `1` and match the record with ID 1
+                if ($property->getType()->getName() == 'int') {
+                    $identifiersExpr->add($expr->eq('e.' . $property->name, ':identifierAsInt'));
+                    $this->setDqlParameter('identifierAsInt', DataTypeUtils::ensureInt($identifier));
+                }
+                else {
+                    $identifiersExpr->add($expr->eq('e.' . $property->name, ':identifier'));
+                    $this->setDqlParameter('identifier', $identifier);
+                }
             }
         }
 
         $this->addFilterExpr($identifiersExpr);
-        $this->setDqlParameter('identifier', $identifier);
     }
 
     public function addFilterDql($dql, $parameters = [])
