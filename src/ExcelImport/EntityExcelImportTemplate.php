@@ -2,11 +2,10 @@
 
 namespace Zan\DoctrineRestBundle\ExcelImport;
 
-use App\Attribute\HumanReadableLabel;
-use App\Util\StringUtil;
 use Zan\CommonBundle\Util\ZanObject;
+use Zan\DoctrineRestBundle\Attribute\HumanReadableLabel;
 use Zan\DoctrineRestBundle\Loader\EntityPropertyMetadata;
-use function App\ExcelImport\count;
+use Zan\DoctrineRestBundle\Util\StringUtils;
 
 /**
  * Parent class for implementing an entity-based Excel import where a spreadsheet
@@ -108,7 +107,7 @@ abstract class EntityExcelImportTemplate extends BaseExcelImportTemplate
         }
         // Fall back to converting camel case to title case
         else {
-            $label = StringUtil::camelCaseToTitleCase($property);
+            $label = StringUtils::camelCaseToTitleCase($property);
         }
 
         $propertyMetadata = new EntityPropertyMetadata(
