@@ -3,7 +3,6 @@
 namespace Zan\DoctrineRestBundle\ExcelImport;
 
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use function App\ExcelImport\count;
 
 class ExcelTemplateImporter
 {
