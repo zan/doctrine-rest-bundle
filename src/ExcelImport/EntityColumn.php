@@ -44,7 +44,8 @@ class EntityColumn extends ExcelColumn
 
         $entity = $this->resolveEntity($value, $mustBeActive);
 
-        if (!$entity) {
+        // Didn't resolve an entity but there was something in the raw value, which means we should have
+        if ($value && !$entity) {
             $context->addErrorToCurrentRow($this->getId(), $this->getLabel() . ' does not contain a valid value');
         }
 
