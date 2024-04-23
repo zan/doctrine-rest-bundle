@@ -52,8 +52,10 @@ class ExcelImportController extends BaseAppController
 
     /**
      * Processes the uploaded file to generate a preview of what will be imported
+     *
+     * NOTE: method must be POST because it accepts a file upload
      */
-    #[Route(path: "/{templateIdentifier}/preview", methods: ["PUT"])]
+    #[Route(path: "/{templateIdentifier}/preview", methods: ["POST"])]
     public function preview(
         string                $templateIdentifier,
         ContainerInterface    $container,
