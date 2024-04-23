@@ -10,6 +10,9 @@ services:
   Zan\DoctrineRestBundle\Loader\ApiEntityLoader:
     public: true
 
+  Zan\DoctrineRestBundle\ExcelImport\ExcelTemplateImporter:
+    public: true
+
   Zan\DoctrineRestBundle\EntitySerializer\MinimalEntitySerializer:
     public: true
 
