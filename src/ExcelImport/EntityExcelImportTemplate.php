@@ -78,7 +78,14 @@ abstract class EntityExcelImportTemplate extends BaseExcelImportTemplate
             // Do not set null values
             if ($value === null) continue;
 
-            ZanObject::setProperty($entity, $property, $value);
+            // This can fail for a variety of reasons, make sure there's a decent user-visible error message
+            try {
+                ZanObject::setProperty($entity, $property, $value);
+            }
+            catch (\Throwable $ex) {
+                $importContext->addErrorToCurrentRow($property, 'PHP Exception: ' . $ex->getMessage());
+                continue;
+            }
         }
 
         $importContext->addImportResult($entity);
