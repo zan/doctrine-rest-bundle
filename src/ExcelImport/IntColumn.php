@@ -20,6 +20,15 @@ class IntColumn extends ExcelColumn
             return null;
         }
 
+        // If we're here, nulls are allowed, so if the value is null return it without attempting int conversion
+        if ($value === null) return null;
+
+        // Check for valid format
+        if (!is_numeric($value)) {
+            $context->addErrorToCurrentRow($this->getId(), $this->getLabel() . ' is not a valid number');
+            return null;
+        }
+
         return intval($value);
     }
 }
