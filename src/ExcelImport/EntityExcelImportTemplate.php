@@ -146,9 +146,15 @@ abstract class EntityExcelImportTemplate extends BaseExcelImportTemplate
             $column->setValueSearchFields(['label']);
             $column->setAllowDeactivatedValues(false);
         }
-        // Use a string for scalar value columns
+        // Scalar types
         else {
-            $column = new StringColumn($property, $label);
+            if ('integer' == $propertyMetadata->dataType) {
+                $column = new IntColumn($property, $label);
+            }
+            // Use a string for scalar value columns
+            else {
+                $column = new StringColumn($property, $label);
+            }
 
             if ($propertyMetadata->doctrineMetadata['nullable'] === false) {
                 $column->setAllowBlank(false);
