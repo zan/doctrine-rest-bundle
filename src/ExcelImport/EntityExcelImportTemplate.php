@@ -118,6 +118,7 @@ abstract class EntityExcelImportTemplate extends BaseExcelImportTemplate
         // Set depending on the configuration of the entity property
         $column = null;
 
+        // Entity columns
         if ('entity' === $propertyMetadata->dataType) {
             // Multi-value associations, eg. OneToMany or ManyToMany
             if ($propertyMetadata->isToManyAssociation()) {
@@ -138,8 +139,13 @@ abstract class EntityExcelImportTemplate extends BaseExcelImportTemplate
             $column->setValueSearchFields(['label']);
             $column->setAllowDeactivatedValues(false);
         }
+        // Use a string for scalar value columns
         else {
             $column = new StringColumn($property, $label);
+
+            if ($propertyMetadata->doctrineMetadata['nullable'] === false) {
+                $column->setAllowBlank(false);
+            }
         }
 
         return $column;
