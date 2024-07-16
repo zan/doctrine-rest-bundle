@@ -107,7 +107,11 @@ abstract class AbstractEntityResultSet
         return $result;
     }
 
-    public function getPagedResult(): Paginator
+    /**
+     * @param bool $disablePaginatorFetchJoinCollection If true, disable the Paginator's fetchJoinCollection behavior
+     *      See: https://www.doctrine-project.org/projects/doctrine-orm/en/2.14/tutorials/pagination.html
+     */
+    public function getPagedResult(bool $disablePaginatorFetchJoinCollection = false): Paginator
     {
         $qb = $this->finalizeQueryBuilder();
 
@@ -115,7 +119,7 @@ abstract class AbstractEntityResultSet
             ->setFirstResult($this->firstResultOffset)
             ->setMaxResults($this->maxNumResults);
 
-        $paginator = new Paginator($query);
+        $paginator = new Paginator($query, !$disablePaginatorFetchJoinCollection);
 
         return $paginator;
     }
