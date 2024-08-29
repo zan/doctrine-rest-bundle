@@ -18,6 +18,8 @@ class ZanQueryBuilder extends QueryBuilder
 
     private int $uniqueParamCounter = 1;
 
+    private int $nextResolvedAliasId = 1;
+
     /**
      * Resolves a dot-separated property path into a series of joins and returns the join alias to use when comparing
      * against the field
@@ -102,8 +104,15 @@ class ZanQueryBuilder extends QueryBuilder
         // Replace any remaining slashes with underscores
         $entityNamespace = str_replace('\\', '_', $entityNamespace);
 
-        // The alias is the namespace and property
-        $joinAlias = $entityNamespace . '_' . $property;
+        // The alias is the namespace, a unique ID, and property
+        // Something like: Department1_supervisor
+        $joinAlias = sprintf(
+            '%s%s_%s',
+            $entityNamespace,
+            $this->nextResolvedAliasId,
+            $property
+        );
+        $this->nextResolvedAliasId++;
 
         // If there's a $resolvedProperty update it with this join alias
         if ($resolvedProperty) $resolvedProperty->addJoinAlias($joinAlias);
