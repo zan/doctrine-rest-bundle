@@ -190,6 +190,9 @@ class ApiEntityLoader
         if ('text' === $propertyMetadata->dataType) {
             return (string)$rawValue;
         }
+        if ('json' === $propertyMetadata->dataType) {
+            return json_decode($rawValue, true);
+        }
         if ('decimal' === $propertyMetadata->dataType) {
             return floatval($rawValue);
         }
