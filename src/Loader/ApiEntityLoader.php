@@ -150,17 +150,17 @@ class ApiEntityLoader
 
             // Skip properties that don't exist on the entity
             if (!$propertyMetadata->exists) {
-                if ($enableDebugging) dump("Not setting ${propertyName}: this property does not exist on " . get_class($entity));
+                if ($enableDebugging) dump("Not setting {$propertyName}: this property does not exist on " . get_class($entity));
                 continue;
             }
 
             // Skip properties that the user cannot edit
             if (!$this->canEdit($entity, $propertyName)) {
-                if ($enableDebugging) dump("Not setting ${propertyName}: user does not have permissions to edit this field on a " . get_class($entity));
+                if ($enableDebugging) dump("Not setting {$propertyName}: user does not have permissions to edit this field on a " . get_class($entity));
                 continue;
             }
 
-            if ($enableDebugging) dump("Setting " . get_class($entity) . "::${propertyName} to:");
+            if ($enableDebugging) dump("Setting " . get_class($entity) . "::{$propertyName} to:");
             $resolvedValue = $this->resolveValue($value, $propertyMetadata);
 
             if ($enableDebugging) dump($resolvedValue);

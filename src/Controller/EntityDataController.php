@@ -181,7 +181,7 @@ class EntityDataController extends AbstractController
         EntityManagerInterface $em,
         Reader $annotationReader,
         PermissionsCalculatorFactory $permissionsCalculatorFactory,
-        Registry $workflowRegistry = null
+        ?Registry $workflowRegistry = null
     ) {
         $params = RequestUtils::getParameters($request);
         $entityClassName = $this->unescapeEntityId($entityId);
@@ -283,7 +283,7 @@ class EntityDataController extends AbstractController
 
         $serialized = $serializer->serialize($entity, $responseFields);
 
-        if ($request->query->has('includeWorkflow')) {
+        if ($request->query->has('includeWorkflow') && $workflowRegistry !== null) {
             $serialized['workflow'] = $this->serializeWorkflow($entity, $workflowRegistry);
         }
 

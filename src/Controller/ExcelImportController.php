@@ -133,7 +133,7 @@ class ExcelImportController extends BaseAppController
 
         /** @var ?BaseExcelImportTemplate $template */
         $template = $container->get($templateServiceId);
-        if (!$template) throw new \InvalidArgumentException("Template not found, ensure '${templateIdentifier}' is registered as a service");
+        if (!$template) throw new \InvalidArgumentException("Template not found, ensure '{$templateIdentifier}' is registered as a service");
 
         return $template;
     }

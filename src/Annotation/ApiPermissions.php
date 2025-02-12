@@ -27,7 +27,7 @@ class ApiPermissions implements Annotation
 
     private ?string $permissionsClass;
 
-    public function __construct($read = [], $write = [], $create = [], $delete = [], string $class = null)
+    public function __construct($read = [], $write = [], $create = [], $delete = [], ?string $class = null)
     {
         $this->createSpecification = is_array($create) ? $create : [ $create ];
         $this->readSpecification = is_array($read) ? $read : [ $read ];
