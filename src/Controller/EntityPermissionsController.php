@@ -8,6 +8,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Core\Security;
 use Zan\CommonBundle\Util\RequestUtils;
 use Zan\DoctrineRestBundle\Api\Error;
 use Zan\DoctrineRestBundle\EntityResultSet\GenericEntityResultSet;
@@ -21,13 +22,22 @@ use Zan\DoctrineRestBundle\Util\DoctrineRestUtils;
  * 
  * @Route("/entity-permissions")
  */
+#[Route('/entity-permissions')]
 class EntityPermissionsController
 {
+    private Security $security;
+
+    public function __construct(Security $security)
+    {
+        $this->security = $security;
+    }
+
     /**
      * Checking an entity class name without an identifier - check create permissions
      *
      * @Route("/{entityId}", methods={"GET"})
      */
+    #[Route('/{entityId}', methods: ["GET"])]
     public function getGeneralEntityPermissions(
         string $entityId,
         Request $request,
@@ -41,7 +51,7 @@ class EntityPermissionsController
         if (!$permissionsCalculator) return new ApiErrorResponse(Error::NO_ENTITY_PERMISSIONS, 'No permissions calculator is defined for ' . $entityId);
 
         $permissions = [
-            'create' => $permissionsCalculator->canCreateEntity($entityClassName, $this->getUser(), $params),
+            'create' => $permissionsCalculator->canCreateEntity($entityClassName, $this->security->getUser(), $params),
         ];
 
         return new ApiResponse($permissions);
@@ -52,6 +62,7 @@ class EntityPermissionsController
      *
      * @Route("/{entityId}/{identifier}", methods={"GET"})
      */
+    #[Route('/{entityId}/{identifier}', methods: ["GET"])]
     public function getSpecificEntityPermissions(
         string $entityId,
         string $identifier,
@@ -85,7 +96,7 @@ class EntityPermissionsController
         }
 
         $permissions = [
-            'edit' => $permissionsCalculator->canEditEntity($entity, $this->getUser()),
+            'edit' => $permissionsCalculator->canEditEntity($entity, $this->security->getUser()),
         ];
 
         return new ApiResponse($permissions);

@@ -8,6 +8,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Workflow\Registry;
 use Zan\DoctrineRestBundle\EntityResultSet\GenericEntityResultSet;
 use Zan\DoctrineRestBundle\Response\WorkflowResponse;
@@ -16,11 +17,20 @@ use Zan\DoctrineRestBundle\Util\DoctrineRestUtils;
 /**
  * @Route("/entity-workflow")
  */
+#[Route('/entity-workflow')]
 class EntityWorkflowController
 {
+    private Securit $security;
+
+    public function __construct(Security $security)
+    {
+        $this->security = $security;
+    }
+
     /**
      * @Route("/{entityId}/{identifier}", methods={"GET"})
      */
+    #[Route('/{entityId}/{identifier}', methods: ["GET"])]
     public function getEntityWorkflow(
         string $entityId,
         string $identifier,
@@ -36,7 +46,7 @@ class EntityWorkflowController
         }
 
         $resultSet = new GenericEntityResultSet($entityClassName, $em, $annotationReader);
-        $resultSet->setActingUser($this->getUser());
+        $resultSet->setActingUser($this->security->getUser());
 
         // Apply identifier filter
         $resultSet->addIdentifierFilter($identifier);
@@ -55,6 +65,7 @@ class EntityWorkflowController
     /**
      * @Route("/{entityId}/{identifier}/transition", methods={"POST"})
      */
+    #[Route('/{entityId}/{identifier}/transition', methods: ["POST"])]
     public function transition(
         string $entityId,
         string $identifier,
@@ -72,7 +83,7 @@ class EntityWorkflowController
         }
 
         $resultSet = new GenericEntityResultSet($entityClassName, $em, $annotationReader);
-        $resultSet->setActingUser($this->getUser());
+        $resultSet->setActingUser($this->security->getUser());
 
         // Apply identifier filter
         $resultSet->addIdentifierFilter($identifier);
