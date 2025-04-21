@@ -21,7 +21,7 @@ use Zan\DoctrineRestBundle\Util\DoctrineRestUtils;
  * 
  * @Route("/entity-permissions")
  */
-class EntityPermissionsController extends AbstractController
+class EntityPermissionsController
 {
     /**
      * Checking an entity class name without an identifier - check create permissions

@@ -15,7 +15,7 @@ use Zan\DoctrineRestBundle\EntitySerializer\MinimalEntitySerializer;
 /**
  * 
  */
-class LoggedInUserController extends AbstractController
+class LoggedInUserController
 {
     /**
      * @Route("/logged-in-user")

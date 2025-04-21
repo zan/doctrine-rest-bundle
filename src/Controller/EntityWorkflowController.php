@@ -16,7 +16,7 @@ use Zan\DoctrineRestBundle\Util\DoctrineRestUtils;
 /**
  * @Route("/entity-workflow")
  */
-class EntityWorkflowController extends AbstractController
+class EntityWorkflowController
 {
     /**
      * @Route("/{entityId}/{identifier}", methods={"GET"})

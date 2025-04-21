@@ -5,8 +5,6 @@ namespace Zan\DoctrineRestBundle\Controller;
 
 
 use Doctrine\ORM\OptimisticLockException;
-use Symfony\Component\DependencyInjection\Container;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Workflow\Registry;
 use Zan\CommonBundle\Util\RequestUtils;
 use Zan\CommonBundle\Util\ZanAnnotation;
@@ -42,7 +40,7 @@ use Zan\DoctrineRestBundle\Response\WorkflowResponse;
 /**
  * @Route("/entity")
  */
-class EntityDataController extends AbstractController
+class EntityDataController
 {
     /**
      * @Route("/{entityId}", methods={"GET"})

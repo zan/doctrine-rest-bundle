@@ -2,9 +2,9 @@
 
 namespace Zan\DoctrineRestBundle\Controller;
 
-use App\Controller\BaseAppController;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Psr\Container\ContainerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -26,7 +26,7 @@ use Zan\DoctrineRestBundle\Util\DoctrineRestUtils;
  * NOTE: This functionality requires phpoffice/phpspreadsheet to be installed
  */
 #[Route("/excel-import")]
-class ExcelImportController extends BaseAppController
+class ExcelImportController
 {
     /**
      * Downloads the empty Excel template for the user to fill out
