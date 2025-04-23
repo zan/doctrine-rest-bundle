@@ -5,19 +5,18 @@ namespace Zan\DoctrineRestBundle\Response;
 use Symfony\Component\Workflow\StateMachine;
 use Symfony\Component\Workflow\Transition;
 use Symfony\Component\Workflow\TransitionBlocker;
-use Symfony\Component\Workflow\Workflow;
-use function Symfony\Component\Translation\t;
+use Symfony\Component\Workflow\WorkflowInterface;
 
 /**
  * Helper class for serializing a workflow
  */
 class WorkflowResponse
 {
-    private Workflow $workflow;
+    private WorkflowInterface $workflow;
 
     private $entity;
 
-    public function __construct(Workflow $workflow, $entity)
+    public function __construct(WorkflowInterface $workflow, $entity)
     {
         $this->workflow = $workflow;
         $this->entity = $entity;
