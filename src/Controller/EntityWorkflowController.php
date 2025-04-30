@@ -8,7 +8,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Core\Security;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Workflow\Registry;
 use Zan\DoctrineRestBundle\EntityResultSet\GenericEntityResultSet;
 use Zan\DoctrineRestBundle\Response\WorkflowResponse;
@@ -20,7 +20,7 @@ use Zan\DoctrineRestBundle\Util\DoctrineRestUtils;
 #[Route('/entity-workflow')]
 class EntityWorkflowController
 {
-    private Securit $security;
+    private Security $security;
 
     public function __construct(Security $security)
     {
