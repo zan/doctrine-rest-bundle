@@ -321,12 +321,12 @@ class EntityDataController
             $isBulkOperation = true;
 
             foreach ($decodedBody as $rawEntityData) {
-                $updatedEntities[] = $this->updateSingleEntity($entityClassName, $rawEntityData['id'], $rawEntityData, $entityLoader, $em, $annotationReader, $this->security->getUser());
+                $updatedEntities[] = $this->updateSingleEntity($entityClassName, $rawEntityData['id'], $rawEntityData, $entityLoader, $em, $this->security->getUser());
             }
         }
         // Updating a single entity (this returns a response with a single entity, see below)
         else {
-            $updatedEntities[] = $this->updateSingleEntity($entityClassName, $identifier, $decodedBody, $entityLoader, $em, $annotationReader, $this->security->getUser());
+            $updatedEntities[] = $this->updateSingleEntity($entityClassName, $identifier, $decodedBody, $entityLoader, $em, $this->security->getUser());
         }
 
         // Commit changes to the database
@@ -365,10 +365,9 @@ class EntityDataController
         $rawData,
         ApiEntityLoader $entityLoader,
         EntityManagerInterface $em,
-        $annotationReader,
         UserInterface $user,
     ) {
-        $resultSet = new GenericEntityResultSet($entityClassName, $em, $annotationReader);
+        $resultSet = new GenericEntityResultSet($entityClassName, $em);
         $resultSet->setActingUser($user);
         $resultSet->addIdentifierFilter($identifier);
 
