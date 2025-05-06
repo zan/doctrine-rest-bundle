@@ -4,7 +4,6 @@
 namespace Zan\DoctrineRestBundle\Permissions;
 
 
-use Doctrine\Common\Annotations\Reader;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Zan\CommonBundle\Util\ZanAnnotation;
@@ -15,20 +14,15 @@ class PermissionsCalculatorFactory
     /** @var EntityManagerInterface */
     protected $em;
 
-    /** @var Reader */
-    protected $annotationReader;
-
     protected PermissionsCalculatorRegistry $calculatorRegistry;
 
     private array $cache = [];
 
     public function __construct(
         EntityManagerInterface $em,
-        Reader $annotationReader,
         PermissionsCalculatorRegistry $calculatorRegistry,
     ) {
         $this->em = $em;
-        $this->annotationReader = $annotationReader;
         $this->calculatorRegistry = $calculatorRegistry;
     }
 
@@ -48,19 +42,10 @@ class PermissionsCalculatorFactory
             $apiPermissionsDeclaration = $attributes[0]->newInstance();
         }
 
-        // Try annotations next
         if (!$apiPermissionsDeclaration) {
-            $apiPermissionsDeclaration = ZanAnnotation::getClassAnnotation(
-                $this->annotationReader,
-                ApiPermissions::class,
-                $entityClassName
-            );
-            if (!$apiPermissionsDeclaration) {
-                $this->cache[$entityClassName] = null;
-                return null;
-            }
+            $this->cache[$entityClassName] = null;
+            return null;
         }
-
 
         // Look for the class as a registered service
         if ($apiPermissionsDeclaration->getPermissionsClass()) {
