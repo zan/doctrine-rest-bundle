@@ -300,7 +300,6 @@ class EntityDataController
         Request $request,
         EntityManagerInterface $em,
         ApiEntityLoader $entityLoader,
-        Reader $annotationReader,
         PermissionsCalculatorFactory $permissionsCalculatorFactory,
         MinimalEntitySerializer $serializer,
     ) {
