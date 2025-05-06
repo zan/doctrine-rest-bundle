@@ -175,7 +175,6 @@ class EntityDataController
         string $identifier,
         Request $request,
         EntityManagerInterface $em,
-        Reader $annotationReader,
         PermissionsCalculatorFactory $permissionsCalculatorFactory,
         MinimalEntitySerializer $serializer,
         ?Registry $workflowRegistry = null,
@@ -233,7 +232,6 @@ class EntityDataController
             $includeFieldEditability = true;
             $propertyEditabilityMap = new EntityPropertyEditabilityMap(
                 $em,
-                $annotationReader,
                 $permissionsCalculator,
                 $user
             );
@@ -246,7 +244,7 @@ class EntityDataController
             );
         }
 
-        $resultSet = new GenericEntityResultSet($entityClassName, $em, $annotationReader);
+        $resultSet = new GenericEntityResultSet($entityClassName, $em);
         $resultSet->setActingUser($user);
         $resultSet->setDataFilterCollection($filterCollection);
         if (!$hasFilter && $identifier) $resultSet->addIdentifierFilter($identifier);

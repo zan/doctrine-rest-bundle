@@ -21,9 +21,6 @@ class EntityPropertyEditabilityMap
     /** @var EntityManagerInterface */
     protected $em;
 
-    /** @var Reader */
-    protected $annotationReader;
-
     /** @var array Properties that can be edited */
     protected $editableProperties = [];
 
@@ -40,7 +37,6 @@ class EntityPropertyEditabilityMap
         $actingUser
     ) {
         $this->em = $em;
-        $this->annotationReader = $annotationReader;
         $this->permissionsCalculator = $permissionsCalculator;
         $this->actingUser = $actingUser;
     }
@@ -118,22 +114,14 @@ class EntityPropertyEditabilityMap
 
         // ApiEnabled attribute
         $attributes = $metadata->reflFields[$property]->getAttributes(ApiEnabled::class);
-        if ($attributes && $attributes[0]->getName() === ApiEnabled::class) return true;
-
-        $annotations = $this->annotationReader->getPropertyAnnotations($metadata->reflFields[$property]);
-
-        $isAvailable = false;
-        foreach ($annotations as $annotation) {
-            $className = get_class($annotation);
-
-            // Zan Doctrine API
-            if ('Zan\DoctrineRestBundle\Annotation\ApiEnabled' === $className) {
-                $isAvailable = true;
-                break;
-            }
+        if ($attributes && $attributes[0]->getName() === ApiEnabled::class)
+        {
+            static::$propertyAvailableToApiCache[$cacheKey] = true;
+            return true;
         }
-
-        static::$propertyAvailableToApiCache[$cacheKey] = $isAvailable;
-        return $isAvailable;
+        else {
+            static::$propertyAvailableToApiCache[$cacheKey] = false;
+            return false;
+        }
     }
 }
