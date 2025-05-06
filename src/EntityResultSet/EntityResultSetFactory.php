@@ -29,7 +29,7 @@ class EntityResultSetFactory
 
     public function mustGetOneReadable(string $entityClassName, $identifier)
     {
-        $resultSet = new GenericEntityResultSet($entityClassName, $this->em, $this->annotationReader);
+        $resultSet = new GenericEntityResultSet($entityClassName, $this->em);
 
         $resultSet->addIdentifierFilter($identifier);
 

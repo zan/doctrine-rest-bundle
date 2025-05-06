@@ -31,7 +31,6 @@ class EntityWorkflowController
         Request $request,
         Registry $workflowRegistry,
         EntityManagerInterface $em,
-        Reader $annotationReader,
     ) {
         $entityClassName = DoctrineRestUtils::unescapeEntityId($entityId);
         // Give identifier in the query string precedence
@@ -39,7 +38,7 @@ class EntityWorkflowController
             $identifier = $request->query->get('identifier');
         }
 
-        $resultSet = new GenericEntityResultSet($entityClassName, $em, $annotationReader);
+        $resultSet = new GenericEntityResultSet($entityClassName, $em);
         $resultSet->setActingUser($this->security->getUser());
 
         // Apply identifier filter
@@ -63,7 +62,6 @@ class EntityWorkflowController
         Request $request,
         Registry $workflowRegistry,
         EntityManagerInterface $em,
-        Reader $annotationReader,
     ) {
         $entityClassName = DoctrineRestUtils::unescapeEntityId($entityId);
         $transition = $request->request->get('transition');
@@ -73,7 +71,7 @@ class EntityWorkflowController
             $transition = $decodedBody['transition'];
         }
 
-        $resultSet = new GenericEntityResultSet($entityClassName, $em, $annotationReader);
+        $resultSet = new GenericEntityResultSet($entityClassName, $em);
         $resultSet->setActingUser($this->security->getUser());
 
         // Apply identifier filter

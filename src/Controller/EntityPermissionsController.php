@@ -62,7 +62,6 @@ class EntityPermissionsController
         string $identifier,
         Request $request,
         EntityManagerInterface $em,
-        Reader $annotationReader,
         PermissionsCalculatorFactory $permissionsCalculatorFactory,
     ): JsonResponse
     {
@@ -73,7 +72,7 @@ class EntityPermissionsController
         if (!$permissionsCalculator) return new ApiErrorResponse(Error::NO_ENTITY_PERMISSIONS, 'No permissions calculator is defined for ' . $entityId);
 
         // Retrieve the entity from the database
-        $resultSet = new GenericEntityResultSet($entityClassName, $em, $annotationReader);
+        $resultSet = new GenericEntityResultSet($entityClassName, $em);
         $resultSet->addIdentifierFilter($identifier);
 
         $entity = $resultSet->getSingleResult();

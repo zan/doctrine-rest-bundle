@@ -384,7 +384,6 @@ class EntityDataController
         string $entityId,
         Request $request,
         EntityManagerInterface $em,
-        Reader $annotationReader,
         EntityMiddlewareRegistry $middlewareRegistry,
         PermissionsCalculatorFactory $permissionsCalculatorFactory,
         ApiEntityLoader $entityLoader,
@@ -503,7 +502,6 @@ class EntityDataController
         string $identifier,
         Request $request,
         EntityManagerInterface $em,
-        Reader $annotationReader,
         PermissionsCalculatorFactory $permissionsCalculatorFactory,
     ) {
         $entityClassName = $this->unescapeEntityId($entityId);
@@ -522,7 +520,7 @@ class EntityDataController
             $identifier = $request->query->get('identifier');
         }
 
-        $resultSet = new GenericEntityResultSet($entityClassName, $em, $annotationReader);
+        $resultSet = new GenericEntityResultSet($entityClassName, $em);
         $resultSet->setActingUser($user);
         $resultSet->addIdentifierFilter($identifier);
 
