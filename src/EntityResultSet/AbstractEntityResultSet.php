@@ -4,7 +4,6 @@
 namespace Zan\DoctrineRestBundle\EntityResultSet;
 
 
-use Doctrine\Common\Annotations\Reader;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\Id;
 use Doctrine\ORM\Query\Expr\Orx;
@@ -25,9 +24,6 @@ abstract class AbstractEntityResultSet
 {
     /** @var EntityManagerInterface */
     protected $em;
-
-    /** @var Reader */
-    protected $annotationReader;
 
     /** @var array */
     protected $resultSetParameters;
@@ -72,10 +68,8 @@ abstract class AbstractEntityResultSet
     public function __construct(
         string $entityClassName,
         EntityManagerInterface $em,
-        Reader $annotationReader,
     ) {
         $this->em = $em;
-        $this->annotationReader = $annotationReader;
         $this->entityClassName = $entityClassName;
         $this->entityMetadata = $em->getClassMetadata($entityClassName);
 
@@ -174,13 +168,7 @@ abstract class AbstractEntityResultSet
         $identifiersExpr = new Orx();
 
         foreach ($this->getEntityProperties() as $property) {
-            $hasDoctrineId = ZanAnnotation::hasPropertyAnnotation(
-                $this->annotationReader,
-                Id::class,
-                $this->getEntityClassName(),
-                $property->name
-            );
-
+            $hasDoctrineId = false;
             $hasDoctrineIdAttribute = $property->getAttributes(Id::class);
             if ($hasDoctrineIdAttribute) $hasDoctrineId = true;
 
@@ -188,16 +176,6 @@ abstract class AbstractEntityResultSet
             $zanPublicIdAttrs = $property->getAttributes(PublicId::class);
             if ($zanPublicIdAttrs) {
                 $hasZanPublicId = true;
-            }
-
-            // Fall back to annotations
-            if (!$hasZanPublicId) {
-                $hasZanPublicId = ZanAnnotation::hasPropertyAnnotation(
-                    $this->annotationReader,
-                    PublicId::class,
-                    $this->getEntityClassName(),
-                    $property->name
-                );
             }
 
             if ($hasDoctrineId || $hasZanPublicId) {
@@ -294,39 +272,14 @@ abstract class AbstractEntityResultSet
 
     protected function calculateOrderBy(ZanQueryBuilder $qb)
     {
-        $hasManualOrderBy = false;
         foreach ($this->orderBys as $rawOrderBy) {
             // NOTE: property already includes the alias, eg. e.requestedBy
             $qb->addOrderBy($rawOrderBy['property'], $rawOrderBy['direction']);
-            $hasManualOrderBy = true;
-        }
-
-        // Exit now if there was a manual "order by", otherwise see if the entity supports automatic sorting
-        if ($hasManualOrderBy) return;
-
-        $classInterfaces = class_implements($this->entityClassName);
-
-        // Gedmo / STOF Sortable
-        if (in_array('Gedmo\Sortable\Sortable', $classInterfaces)) {
-            $properties = ZanObject::getProperties($this->entityClassName);
-            $sortableProperty = null;
-            foreach ($properties as $property) {
-                if (ZanAnnotation::hasPropertyAnnotation($this->annotationReader, 'Gedmo\Mapping\Annotation\SortablePosition', $this->entityClassName, $property->getName())) {
-                    $sortableProperty = $property->getName();
-                    break;
-                }
-            }
-
-            // Found the sortable property, add it to the "order by"
-            if ($sortableProperty) {
-                $qb->addOrderBy($qb->getRootAlias() . '.' . $sortableProperty);
-            }
         }
     }
 
     protected function entitySupportsSoftDelete()
     {
-        // todo: check for Gedmo\SoftDeleteable annotation
         try {
             ZanObject::getProperty($this->entityClassName, 'deletedAt');
             return true;
