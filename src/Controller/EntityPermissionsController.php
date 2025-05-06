@@ -19,8 +19,6 @@ use Zan\DoctrineRestBundle\Util\DoctrineRestUtils;
 
 /**
  * Provides permissions information about an entity class or a specific entity
- * 
- * @Route("/entity-permissions")
  */
 #[Route('/entity-permissions')]
 class EntityPermissionsController
@@ -34,8 +32,6 @@ class EntityPermissionsController
 
     /**
      * Checking an entity class name without an identifier - check create permissions
-     *
-     * @Route("/{entityId}", methods={"GET"})
      */
     #[Route('/{entityId}', methods: ["GET"])]
     public function getGeneralEntityPermissions(
@@ -59,8 +55,6 @@ class EntityPermissionsController
 
     /**
      * Retrieve permissions information about a specific entity
-     *
-     * @Route("/{entityId}/{identifier}", methods={"GET"})
      */
     #[Route('/{entityId}/{identifier}', methods: ["GET"])]
     public function getSpecificEntityPermissions(

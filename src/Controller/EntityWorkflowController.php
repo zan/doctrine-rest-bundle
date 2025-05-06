@@ -14,9 +14,6 @@ use Zan\DoctrineRestBundle\EntityResultSet\GenericEntityResultSet;
 use Zan\DoctrineRestBundle\Response\WorkflowResponse;
 use Zan\DoctrineRestBundle\Util\DoctrineRestUtils;
 
-/**
- * @Route("/entity-workflow")
- */
 #[Route('/entity-workflow')]
 class EntityWorkflowController
 {
@@ -27,9 +24,6 @@ class EntityWorkflowController
         $this->security = $security;
     }
 
-    /**
-     * @Route("/{entityId}/{identifier}", methods={"GET"})
-     */
     #[Route('/{entityId}/{identifier}', methods: ["GET"])]
     public function getEntityWorkflow(
         string $entityId,
@@ -62,9 +56,6 @@ class EntityWorkflowController
         ]);
     }
 
-    /**
-     * @Route("/{entityId}/{identifier}/transition", methods={"POST"})
-     */
     #[Route('/{entityId}/{identifier}/transition', methods: ["POST"])]
     public function transition(
         string $entityId,

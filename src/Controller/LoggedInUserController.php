@@ -13,9 +13,6 @@ use Zan\CommonBundle\Util\RequestUtils;
 use Zan\CommonBundle\Util\ZanArray;
 use Zan\DoctrineRestBundle\EntitySerializer\MinimalEntitySerializer;
 
-/**
- * 
- */
 class LoggedInUserController
 {
     private Security $security;
@@ -25,9 +22,6 @@ class LoggedInUserController
         $this->security = $security;
     }
 
-    /**
-     * @Route("/logged-in-user")
-     */
     #[Route('/logged-in-user')]
     public function getLoggedInUser(
         Request $request,

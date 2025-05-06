@@ -39,9 +39,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Zan\DoctrineRestBundle\Response\WorkflowResponse;
 
-/**
- * @Route("/entity")
- */
 #[Route('/entity')]
 class EntityDataController
 {
@@ -52,9 +49,6 @@ class EntityDataController
         $this->security = $security;
     }
 
-    /**
-     * @Route("/{entityId}", methods={"GET"})
-     */
     #[Route('/{entityId}', methods: ["GET"])]
     public function listEntities(
         string $entityId,
@@ -180,9 +174,6 @@ class EntityDataController
         ]);
     }
 
-    /**
-     * @Route("/{entityId}/{identifier}", methods={"GET"})
-     */
     #[Route('/{entityId}/{identifier}', methods: ["GET"])]
     public function getEntity(
         string $entityId,
@@ -313,9 +304,6 @@ class EntityDataController
         return (new WorkflowResponse($workflow, $entity))->toArray();
     }
 
-    /**
-     * @Route("/{entityId}/{identifier}", methods={"PUT"})
-     */
     #[Route('/{entityId}/{identifier}', methods: ["PUT"])]
     public function updateEntity(
         string $entityId,
@@ -407,9 +395,6 @@ class EntityDataController
         return $entity;
     }
 
-    /**
-     * @Route("/{entityId}", methods={"POST"})
-     */
     #[Route('/{entityId}', methods: ["POST"])]
     public function createEntity(
         string $entityId,
@@ -532,9 +517,6 @@ class EntityDataController
         return new JsonResponse($retData);
     }
 
-    /**
-     * @Route("/{entityId}/{identifier}", methods={"DELETE"})
-     */
     #[Route('/{entityId}/{identifier}', methods: ["DELETE"])]
     public function deleteEntity(
         string $entityId,
@@ -586,9 +568,6 @@ class EntityDataController
         return new JsonResponse(['success' => true]);
     }
 
-    /**
-     * Builds a response for use when there are conflicting edits to an entity
-     */
     protected function buildConflictingEditResponse($entity)
     {
         $retData = [
