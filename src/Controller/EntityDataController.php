@@ -27,7 +27,6 @@ use Zan\DoctrineRestBundle\Permissions\EntityPropertyEditabilityMap;
 use Zan\DoctrineRestBundle\Permissions\PermissionsCalculatorFactory;
 use Zan\DoctrineRestBundle\Permissions\ResultSetDeletabilityMap;
 use Zan\DoctrineRestBundle\Permissions\ResultSetEditabilityMap;
-use Doctrine\Common\Annotations\Reader;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\Id;

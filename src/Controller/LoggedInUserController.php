@@ -2,7 +2,6 @@
 
 namespace Zan\DoctrineRestBundle\Controller;
 
-use Doctrine\Common\Annotations\Reader;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -26,7 +25,7 @@ class LoggedInUserController
     public function getLoggedInUser(
         Request $request,
         EntityManagerInterface $em,
-        Reader $annotationReader,
+        MinimalEntitySerializer $serializer,
     ) {
         $params = RequestUtils::getParameters($request);
         $user = $this->security->getUser();
@@ -37,8 +36,6 @@ class LoggedInUserController
                 'message' => 'No logged in user found',
             ]);
         }
-
-        $serializer = new MinimalEntitySerializer($em, $annotationReader);
 
         $responseFields = [];
         if ($request->query->has('responseFields')) {
