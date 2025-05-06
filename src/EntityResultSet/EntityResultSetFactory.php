@@ -15,16 +15,12 @@ class EntityResultSetFactory
 
     private PermissionsCalculatorFactory $permissionsCalculatorFactory;
 
-    private Reader $annotationReader;
-
     public function __construct(
         EntityManagerInterface $em,
         PermissionsCalculatorFactory $permissionsCalculatorFactory,
-        Reader $annotationReader
     ) {
         $this->em = $em;
         $this->permissionsCalculatorFactory = $permissionsCalculatorFactory;
-        $this->annotationReader = $annotationReader;
     }
 
     public function mustGetOneReadable(string $entityClassName, $identifier)
