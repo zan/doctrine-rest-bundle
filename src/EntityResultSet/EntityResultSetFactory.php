@@ -2,7 +2,6 @@
 
 namespace Zan\DoctrineRestBundle\EntityResultSet;
 
-use Doctrine\Common\Annotations\Reader;
 use Doctrine\ORM\EntityManagerInterface;
 use Zan\DoctrineRestBundle\Permissions\PermissionsCalculatorFactory;
 

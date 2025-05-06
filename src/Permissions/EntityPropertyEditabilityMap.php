@@ -4,7 +4,6 @@
 namespace Zan\DoctrineRestBundle\Permissions;
 
 
-use Doctrine\Common\Annotations\Reader;
 use Doctrine\ORM\EntityManagerInterface;
 use Zan\DoctrineRestBundle\Annotation\ApiEnabled;
 
@@ -32,7 +31,6 @@ class EntityPropertyEditabilityMap
 
     public function __construct(
         EntityManagerInterface $em,
-        Reader $annotationReader,
         PermissionsCalculatorInterface $permissionsCalculator = null,
         $actingUser
     ) {

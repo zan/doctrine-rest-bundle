@@ -28,7 +28,6 @@ services:
     public: true
     arguments:
       - !tagged_iterator zan.drest.entity_middleware
-      - '@annotation_reader'
 
   Zan\DoctrineRestBundle\Listener\ApiExceptionListener:
     tags:
