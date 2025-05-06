@@ -11,7 +11,6 @@ use Zan\CommonBundle\Util\ZanObject;
 use Zan\CommonBundle\Util\ZanString;
 use Zan\DoctrineRestBundle\Annotation\ApiEnabled;
 use Zan\DoctrineRestBundle\EntitySerializer\FieldMap;
-use Doctrine\Common\Annotations\Reader;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
@@ -22,15 +21,11 @@ class MinimalEntitySerializer
     /** @var EntityManager */
     protected $em;
 
-    /** @var Reader */
-    protected $annotationReader;
-
     protected static $propertyAvailableForSerializationCache = [];
 
-    public function __construct(EntityManagerInterface $em, Reader $annotationReader)
+    public function __construct(EntityManagerInterface $em)
     {
         $this->em = $em;
-        $this->annotationReader = $annotationReader;
     }
 
     public function getSerializationMapFromRequest(Request $request): array
@@ -188,14 +183,6 @@ class MinimalEntitySerializer
         $apiEnabledAttributes = $method->getAttributes(ApiEnabled::class);
         if ($apiEnabledAttributes) return true;
 
-        $annotations = $this->annotationReader->getMethodAnnotations($method);
-
-        foreach ($annotations as $annotation) {
-            $className = get_class($annotation);
-
-            if ('Zan\DoctrineRestBundle\Annotation\ApiEnabled' === $className) return true;
-        }
-
         return false;
     }
 
@@ -233,33 +220,13 @@ class MinimalEntitySerializer
         $metadata = $this->em->getClassMetadata(get_class($entity));
 
         $attributes = $metadata->reflFields[$property]->getAttributes(ApiEnabled::class);
-        if ($attributes && $attributes[0]->getName() === ApiEnabled::class) return true;
-
-        $annotations = $this->annotationReader->getPropertyAnnotations($metadata->reflFields[$property]);
-
-        $isAvailable = false;
-        foreach ($annotations as $annotation) {
-            $className = get_class($annotation);
-
-            // Zan Doctrine API
-            if ('Zan\DoctrineRestBundle\Annotation\ApiEnabled' === $className) {
-                $isAvailable = true;
-                break;
-            }
-
-            // JMS Serializer "Expose"
-            if ('JMS\Serializer\Annotation\Expose' === $className) {
-                $isAvailable = true;
-                break;
-            }
-
-            // Symfony serializer "Ignore"
-            if ('Symfony\Component\Serializer\Annotation\Ignore' === $className) {
-                $isAvailable = false;
-            }
+        if ($attributes && $attributes[0]->getName() === ApiEnabled::class) {
+            static::$propertyAvailableForSerializationCache[$cacheKey] = true;
+            return true;
         }
-
-        static::$propertyAvailableForSerializationCache[$cacheKey] = $isAvailable;
-        return $isAvailable;
+        else {
+            static::$propertyAvailableForSerializationCache[$cacheKey] = false;
+            return false;
+        }
     }
 }

@@ -54,8 +54,8 @@ class EntityDataController
         string $entityId,
         Request $request,
         EntityManagerInterface $em,
-        Reader $annotationReader,
         PermissionsCalculatorFactory $permissionsCalculatorFactory,
+        MinimalEntitySerializer $entitySerializer,
     ) {
         $params = RequestUtils::getParameters($request);
         $responseFields = [];
@@ -94,7 +94,7 @@ class EntityDataController
             $filterCollection->addOrFilters($searchFilters);
         }
 
-        $resultSet = new GenericEntityResultSet($entityClassName, $em, $annotationReader);
+        $resultSet = new GenericEntityResultSet($entityClassName, $em);
         $resultSet->setActingUser($user);
         $resultSet->setDataFilterCollection($filterCollection);
 
@@ -108,11 +108,6 @@ class EntityDataController
         if ($request->query->has('sort')) {
             $this->applySortParameter($resultSet, $request->query->get('sort'));
         }
-
-        $entitySerializer = new MinimalEntitySerializer(
-            $em,
-            $annotationReader
-        );
 
         $entities = [];
         $metadata = [];
@@ -182,6 +177,7 @@ class EntityDataController
         EntityManagerInterface $em,
         Reader $annotationReader,
         PermissionsCalculatorFactory $permissionsCalculatorFactory,
+        MinimalEntitySerializer $serializer,
         ?Registry $workflowRegistry = null,
     ) {
         $params = RequestUtils::getParameters($request);
@@ -277,11 +273,6 @@ class EntityDataController
             $metadata['deletability'] = $deletabilityMap->getCompressedMap();
         }
 
-        $serializer = new MinimalEntitySerializer(
-            $em,
-            $annotationReader,
-        );
-
         $serialized = $serializer->serialize($entity, $responseFields);
 
         if ($request->query->has('includeWorkflow') && $workflowRegistry !== null) {
@@ -313,6 +304,7 @@ class EntityDataController
         ApiEntityLoader $entityLoader,
         Reader $annotationReader,
         PermissionsCalculatorFactory $permissionsCalculatorFactory,
+        MinimalEntitySerializer $serializer,
     ) {
         $params = RequestUtils::getParameters($request);
         $entityClassName = $this->unescapeEntityId($entityId);
@@ -322,11 +314,6 @@ class EntityDataController
         if ($request->query->has('responseFields')) {
             $responseFields = ZanArray::createFromString($params['responseFields']);
         }
-
-        $serializer = new MinimalEntitySerializer(
-            $em,
-            $annotationReader
-        );
 
         $decodedBody = json_decode($request->getContent(), true);
         $updatedEntities = [];
@@ -404,6 +391,7 @@ class EntityDataController
         EntityMiddlewareRegistry $middlewareRegistry,
         PermissionsCalculatorFactory $permissionsCalculatorFactory,
         ApiEntityLoader $entityLoader,
+        MinimalEntitySerializer $serializer,
     ) {
         $params = RequestUtils::getParameters($request);
         $decodedBody = json_decode($request->getContent(), true);
@@ -421,11 +409,6 @@ class EntityDataController
         if (!$entityClassName) throw new \InvalidArgumentException('entityClassName is required');
 
         $permissionsCalculator = $permissionsCalculatorFactory->getPermissionsCalculator($entityClassName);
-
-        $serializer = new MinimalEntitySerializer(
-            $em,
-            $annotationReader
-        );
 
         // Deny access unless there's a calculator that specifically permits access
         if (!$permissionsCalculator) {
