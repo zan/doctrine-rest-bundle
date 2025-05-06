@@ -36,7 +36,7 @@ use \Doctrine\ORM\Query\Expr\Orx;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 use Zan\DoctrineRestBundle\Response\WorkflowResponse;
 
 #[Route('/entity')]
