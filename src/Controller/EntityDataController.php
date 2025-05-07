@@ -9,7 +9,6 @@ use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Workflow\Registry;
 use Zan\CommonBundle\Util\RequestUtils;
-use Zan\CommonBundle\Util\ZanAnnotation;
 use Zan\CommonBundle\Util\ZanArray;
 use Zan\CommonBundle\Util\ZanDebug;
 use Zan\DoctrineRestBundle\Annotation\PublicId;

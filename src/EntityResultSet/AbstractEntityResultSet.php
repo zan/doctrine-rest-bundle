@@ -8,7 +8,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\Id;
 use Doctrine\ORM\Query\Expr\Orx;
 use Doctrine\ORM\Tools\Pagination\Paginator;
-use Zan\CommonBundle\Util\ZanAnnotation;
 use Zan\CommonBundle\Util\ZanObject;
 use Zan\DoctrineRestBundle\Annotation\PublicId;
 use Zan\DoctrineRestBundle\EntityResultSet\EntityResultSetAvailableParameter;

@@ -6,7 +6,6 @@ namespace Zan\DoctrineRestBundle\Permissions;
 
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
-use Zan\CommonBundle\Util\ZanAnnotation;
 use Zan\DoctrineRestBundle\Annotation\ApiPermissions;
 
 class PermissionsCalculatorFactory
